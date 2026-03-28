@@ -18,7 +18,7 @@ router.post('/transcribe', upload.single('image'), async (req: AuthedRequest, re
 
   try {
     const client = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-    const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await model.generateContent([
       {
         inlineData: {
@@ -27,8 +27,16 @@ router.post('/transcribe', upload.single('image'), async (req: AuthedRequest, re
         },
       },
       `Read the medical image carefully.
-Return strict JSON with keys:
-transcription, summary, medicines, warnings.`,
+Return strict JSON only with these keys:
+transcription, summary, medicines, warnings.
+
+Rules:
+- transcription: string
+- summary: string
+- medicines: string[]
+- warnings: string[]
+- If a field is unavailable, still return it with an empty string or empty array.
+- Do not include markdown fences.`,
     ]);
 
     return res.json({ result: result.response.text() });
