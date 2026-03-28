@@ -1,0 +1,137 @@
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import { Clock3, Ticket } from 'lucide-react';
+import { departments } from '../config';
+import { api } from '../lib/api';
+import { useRealtimeTable } from '../hooks/useRealtimeTable';
+import type { QueueItem } from '../types';
+import { StatusBadge } from './StatusBadge';
+
+type QueueResponse = {
+  items: QueueItem[];
+  summary: {
+    waiting: number;
+    called: number;
+    done: number;
+    estimatedWaitMinutes: number;
+  };
+};
+
+export const QueuePanel = () => {
+  const [patientName, setPatientName] = useState('');
+  const [department, setDepartment] = useState(departments[0]);
+  const [queue, setQueue] = useState<QueueResponse>({
+    items: [],
+    summary: { waiting: 0, called: 0, done: 0, estimatedWaitMinutes: 0 },
+  });
+  const [latestToken, setLatestToken] = useState<{ token: string; position: number; eta: number } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const loadQueue = async () => {
+    const data = await api.get<QueueResponse>(`/queue?department=${encodeURIComponent(department)}`);
+    setQueue(data);
+  };
+
+  useEffect(() => {
+    void loadQueue();
+  }, [department]);
+
+  useRealtimeTable('queue_items', () => {
+    void loadQueue();
+  });
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await api.post<{
+        item: QueueItem;
+        queuePosition: number;
+        estimatedWaitMinutes: number;
+      }>('/queue', { patient_name: patientName, department });
+
+      setLatestToken({
+        token: response.item.token_number,
+        position: response.queuePosition,
+        eta: response.estimatedWaitMinutes,
+      });
+      setPatientName('');
+      await loadQueue();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to create token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const waitingList = queue.items.filter((item) => item.status !== 'done');
+
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Smart Queue</p>
+          <h2>Book OPD token and track live queue status</h2>
+        </div>
+        <div className="stat-row">
+          <div className="mini-stat">
+            <Clock3 size={18} />
+            <span>{queue.summary.estimatedWaitMinutes} min wait</span>
+          </div>
+          <div className="mini-stat">
+            <Ticket size={18} />
+            <span>{queue.summary.waiting} waiting</span>
+          </div>
+        </div>
+      </div>
+
+      <form className="grid-form" onSubmit={handleSubmit}>
+        <input
+          value={patientName}
+          onChange={(event) => setPatientName(event.target.value)}
+          placeholder="Patient full name"
+          required
+        />
+        <select value={department} onChange={(event) => setDepartment(event.target.value)}>
+          {departments.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Generating token...' : 'Get Token'}
+        </button>
+      </form>
+
+      {latestToken ? (
+        <div className="token-card">
+          <span className="token-label">Your Token</span>
+          <strong>{latestToken.token}</strong>
+          <span>Queue position {latestToken.position}</span>
+          <span>Estimated wait {latestToken.eta} minutes</span>
+        </div>
+      ) : null}
+
+      {message ? <p className="error-text">{message}</p> : null}
+
+      <div className="queue-list">
+        {waitingList.map((item, index) => (
+          <article key={item.id} className="queue-item">
+            <div>
+              <strong>{item.token_number}</strong>
+              <p>{item.patient_name}</p>
+            </div>
+            <div className="queue-meta">
+              <span>#{index + 1} in line</span>
+              <StatusBadge tone={item.status} />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+};
