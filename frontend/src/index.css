@@ -85,7 +85,7 @@ select {
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.15rem;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(14px);
@@ -96,12 +96,17 @@ select {
   z-index: 10;
 }
 
-.topbar > div,
-.topbar nav {
+.brand-block,
+.topnav {
   display: flex;
   gap: 0.9rem;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.brand-copy {
+  display: grid;
+  gap: 0.05rem;
 }
 
 .brand-mark {
@@ -130,8 +135,9 @@ select {
 
 .topbar strong {
   font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  font-size: 1.7rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.1;
 }
 
 .topbar span,
@@ -144,23 +150,15 @@ select {
 }
 
 .topbar a {
-  padding: 0.55rem 0.9rem;
+  padding: 0.55rem 0.85rem;
   border-radius: 999px;
+  font-size: 0.95rem;
+  color: var(--muted);
 }
 
 .topbar a.active {
   background: var(--primary-soft);
   color: var(--primary-deep);
-}
-
-.admin-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: 999px;
-  background: #eef1f8;
-  color: var(--muted);
 }
 
 .page-shell {
@@ -179,7 +177,7 @@ select {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
   gap: 1rem;
-  padding: 1.8rem;
+  padding: 1.35rem;
   background:
     radial-gradient(circle at 22% 18%, rgba(162, 176, 238, 0.22), transparent 18%),
     radial-gradient(circle at 82% 58%, rgba(246, 215, 188, 0.28), transparent 17%),
@@ -194,6 +192,10 @@ select {
   grid-template-columns: 1fr;
 }
 
+.home-hero {
+  padding: 1.15rem 1.35rem;
+}
+
 .hero-text,
 .hero-card p,
 .hero-card li {
@@ -204,7 +206,7 @@ select {
   background: rgba(255, 255, 255, 0.52);
   border: 1px solid rgba(136, 149, 188, 0.16);
   border-radius: 22px;
-  padding: 1.2rem;
+  padding: 1rem;
 }
 
 .hero-card ul {
@@ -217,11 +219,17 @@ select {
   align-items: flex-start;
 }
 
+.hero-copy {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 760px;
+}
+
 .hero-pills {
   display: flex;
   gap: 0.7rem;
   flex-wrap: wrap;
-  margin-top: 1rem;
+  margin-top: 0.35rem;
 }
 
 .hero-pills span,
@@ -239,7 +247,7 @@ select {
   border: 1px solid var(--border);
   background: var(--panel);
   backdrop-filter: blur(16px);
-  padding: 1.25rem;
+  padding: 1.1rem;
   border-radius: 26px;
   box-shadow: var(--shadow);
 }
@@ -296,13 +304,13 @@ select {
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: var(--primary-deep);
   font-weight: 700;
   margin-bottom: 0.4rem;
@@ -342,7 +350,7 @@ select {
 }
 
 .token-card strong {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: var(--primary-deep);
 }
 
@@ -503,8 +511,49 @@ select {
 
 .hero h1 {
   font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  font-size: clamp(3rem, 8vw, 6.3rem);
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-  max-width: 12ch;
+  font-size: clamp(2rem, 3.4vw, 3.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  max-width: 11ch;
+}
+
+.hero.compact-hero h1 {
+  font-size: clamp(1.85rem, 3vw, 2.75rem);
+  max-width: 14ch;
+}
+
+.hero-text {
+  max-width: 46ch;
+  font-size: 0.98rem;
+}
+
+.panel h2 {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.panel h3 {
+  font-size: 0.98rem;
+}
+
+@media (max-width: 840px) {
+  .topnav {
+    gap: 0.45rem;
+  }
+
+  .topbar a {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .home-hero,
+  .hero {
+    padding: 1rem;
+  }
+
+  .hero.compact-hero h1,
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(1.85rem, 9vw, 2.55rem);
+  }
 }

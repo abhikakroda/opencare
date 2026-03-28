@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Activity, ArrowRight, BedDouble, Building2, Pill, ScanText, ShieldCheck, Ticket } from 'lucide-react';
+import { Activity, ArrowRight, BedDouble, Building2, Pill, ScanText, Ticket } from 'lucide-react';
 import { Link, NavLink, Route, Routes } from 'react-router-dom';
 import { AdminBedTools } from './components/AdminBedTools';
 import { AdminLogin } from './components/AdminLogin';
@@ -13,22 +13,18 @@ import { VisionPanel } from './components/VisionPanel';
 
 const PatientHome = () => (
   <main className="page-shell">
-    <section className="hero">
+    <section className="hero compact-hero home-hero">
       <div className="hero-copy">
         <p className="eyebrow">OpenCare Medicare</p>
-        <h1>Hospital access redesigned into focused pages instead of one crowded dashboard.</h1>
+        <h1>Hospital access, made simple.</h1>
         <p className="hero-text">
-          Patients and staff can move between dedicated queue, pharmacy, bed, and scan screens on mobile or desktop.
+          Open the page you need for queue, medicines, beds, or prescription scan.
         </p>
         <div className="hero-pills">
           <span><Activity size={16} /> Realtime queue</span>
           <span><Pill size={16} /> Stock lookup</span>
           <span><Building2 size={16} /> Bed dashboard</span>
         </div>
-      </div>
-      <div className="hero-card">
-        <h3>Patient Pages</h3>
-        <p>Each workflow now has its own page for better focus and easier mobile use.</p>
       </div>
     </section>
 
@@ -149,17 +145,20 @@ function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
+        <div className="brand-block">
           <p className="brand-mark">OC</p>
-          <div>
+          <div className="brand-copy">
             <strong>OpenCare Hospital Suite</strong>
-            <span>Patients on mobile and web, staff on the admin console</span>
+            <span>Hospital access system</span>
           </div>
         </div>
-        <nav>
-          <NavLink to="/">Patient Portal</NavLink>
+        <nav className="topnav">
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/queue">Queue</NavLink>
+          <NavLink to="/medicines">Medicines</NavLink>
+          <NavLink to="/beds">Beds</NavLink>
+          <NavLink to="/scan">Scan</NavLink>
           <NavLink to="/admin">Admin</NavLink>
-          <span className="admin-chip"><ShieldCheck size={14} /> Secure staff actions</span>
         </nav>
       </header>
 
