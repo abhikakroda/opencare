@@ -12,23 +12,9 @@ import { attachAuthUser, type AuthedRequest } from './middleware/resolveUser.js'
 
 const app = express();
 
-const allowedOrigins = new Set([
-  env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:4173',
-  'http://127.0.0.1:4173',
-]);
-
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error(`Origin ${origin} is not allowed by CORS.`));
-    },
+    origin: env.FRONTEND_URL,
   }),
 );
 app.use(express.json({ limit: '5mb' }));

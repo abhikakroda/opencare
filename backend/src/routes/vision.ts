@@ -20,9 +20,7 @@ router.post('/transcribe', upload.single('image'), async (req: AuthedRequest, re
     return rbacError(res, error);
   }
 
-  const geminiApiKey = process.env.GEMINI_API_KEY?.trim() || env.GEMINI_API_KEY?.trim();
-
-  if (!geminiApiKey) {
+  if (!env.GEMINI_API_KEY) {
     return res.status(400).json({ message: 'Gemini API key is not configured.' });
   }
 
@@ -31,7 +29,7 @@ router.post('/transcribe', upload.single('image'), async (req: AuthedRequest, re
   }
 
   try {
-    const client = new GoogleGenerativeAI(geminiApiKey);
+    const client = new GoogleGenerativeAI(env.GEMINI_API_KEY);
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent([
       {

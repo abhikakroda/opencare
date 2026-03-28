@@ -26,15 +26,3 @@ values
   ('CT Scanner', 'Imaging', 'Radiology Floor 1', 1, 'in_use', 'Current scan running'),
   ('Ventilator', 'ICU Support', 'ICU Store', 6, 'available', 'Portable units ready'),
   ('Dialysis Machine', 'Renal Care', 'Ward D / Unit 2', 2, 'maintenance', 'One unit under service');
-
-insert into public.admin_users (email, password, full_name, role, is_active)
-values
-  ('admin@opencare.com', '123456', 'OpenCare Admin', 'admin', true),
-  ('staff@opencare.local', 'ChangeThis123', 'OpenCare Staff', 'staff', true)
-on conflict (email) do update
-set
-  password = excluded.password,
-  full_name = excluded.full_name,
-  role = excluded.role,
-  is_active = excluded.is_active,
-  updated_at = now();

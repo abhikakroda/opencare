@@ -7,16 +7,10 @@ import type { QueueItem } from '../types';
 export const AdminQueueTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [department, setDepartment] = useState(departments[0]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   const loadQueue = async () => {
-    try {
-      const data = await api.get<{ items: QueueItem[] }>(`/queue?department=${encodeURIComponent(department)}`);
-      setQueue(data.items);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load queue');
-    }
+    const data = await api.get<{ items: QueueItem[] }>(`/queue?department=${encodeURIComponent(department)}`);
+    setQueue(data.items);
   };
 
   useEffect(() => {
@@ -26,18 +20,6 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
   useRealtimeTable('queue_items', () => {
     void loadQueue();
   });
-
-  const handleAction = async (runner: () => Promise<unknown>, successText: string) => {
-    setError('');
-    setMessage('');
-    try {
-      await runner();
-      setMessage(successText);
-      await loadQueue();
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Action failed');
-    }
-  };
 
   return (
     <section className="panel">
@@ -64,15 +46,12 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
           type="button"
           disabled={readOnly}
           onClick={() => {
-            void handleAction(() => api.post('/queue/call-next', { department }, token), 'Next patient called');
+            void api.post('/queue/call-next', { department }, token).then(() => loadQueue());
           }}
         >
           Call Next
         </button>
       </div>
-
-      {message ? <p className="success-text">{message}</p> : null}
-      {error ? <p className="error-text">{error}</p> : null}
 
       <div className="stack-list">
         {queue.map((item) => (
@@ -86,7 +65,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
                 type="button"
                 disabled={readOnly}
                 onClick={() => {
-                  void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'called' }, token), `${item.token_number} marked called`);
+                  void api.patch(`/queue/${item.id}/status`, { status: 'called' }, token).then(() => loadQueue());
                 }}
               >
                 Call
@@ -95,7 +74,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
                 type="button"
                 disabled={readOnly}
                 onClick={() => {
-                  void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'done' }, token), `${item.token_number} marked done`);
+                  void api.patch(`/queue/${item.id}/status`, { status: 'done' }, token).then(() => loadQueue());
                 }}
               >
                 Done
