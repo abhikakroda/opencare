@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
+import { ADMIN_PROFILE_STORAGE_KEY, ADMIN_TOKEN_STORAGE_KEY, api } from '../lib/api';
 
 export type AdminAccessRole = 'admin' | 'staff' | 'nodal_officer';
 
@@ -32,7 +32,13 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
     setLoading(true);
 
     try {
-      const response = await api.post<AdminSession>('/auth/login', { email, password });
+      const cleanedEmail = email.trim().toLowerCase();
+      const cleanedPassword = password.trim();
+
+      window.localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+      window.localStorage.removeItem(ADMIN_PROFILE_STORAGE_KEY);
+
+      const response = await api.post<AdminSession>('/auth/login', { email: cleanedEmail, password: cleanedPassword });
       onLogin(response);
       navigate('/admin');
     } catch (loginError) {
@@ -56,6 +62,13 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
         <span className="badge">Admin</span>
         <span className="badge">Staff</span>
         <span className="badge">Nodal Officer</span>
+      </div>
+
+      <div className="admin-callout admin-callout-info">
+        <strong>Demo access</strong>
+        <p>
+          <code>admin@opencare.com</code> / <code>123456</code>
+        </p>
       </div>
 
       {notice ? (

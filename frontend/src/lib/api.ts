@@ -36,7 +36,13 @@ const handleUnauthorized = () => {
 const readNetworkError = (error: unknown) => {
   if (error instanceof Error && error.message) {
     if (error.message === 'Failed to fetch' || error.message === 'Load failed') {
-      return 'Cannot connect to the backend right now. Check that the API server is running on localhost:4000.';
+      const isLocalApp =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      return isLocalApp
+        ? 'Cannot connect to the backend right now. Check that the API server is running on localhost:4000.'
+        : 'Cannot connect right now. Please try again in a moment.';
     }
 
     return error.message;
