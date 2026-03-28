@@ -14,10 +14,19 @@ const getStockTone = (quantity: number): 'stock-ok' | 'stock-low' | 'stock-out' 
 export const MedicinePanel = () => {
   const [search, setSearch] = useState('');
   const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadMedicines = async () => {
-    const data = await api.get<{ items: Medicine[] }>(`/medicines?search=${encodeURIComponent(search)}`);
-    setMedicines(data.items);
+    try {
+      const data = await api.get<{ items: Medicine[] }>(`/medicines?search=${encodeURIComponent(search)}`);
+      setMedicines(data.items);
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load medicines');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -45,6 +54,15 @@ export const MedicinePanel = () => {
           placeholder="Search paracetamol, dolo, azithromycin..."
         />
       </label>
+
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading stock data...</p> : null}
+      {!loading && medicines.length === 0 ? (
+        <div className="empty-state">
+          <strong>No medicine matched your search.</strong>
+          <p>Try a generic name, brand name, or clear the filter.</p>
+        </div>
+      ) : null}
 
       <div className="medicine-grid">
         {medicines.map((medicine) => (

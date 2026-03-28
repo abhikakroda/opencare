@@ -46,6 +46,49 @@ router.get('/', async (req, res) => {
   return res.json({ items });
 });
 
+router.post('/', requireOperationalUser, async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'medicines', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = requireSupabase();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Supabase is not configured.';
+    return res.status(503).json({ message });
+  }
+
+  const parsed = z
+    .object({
+      name: z.string().min(2),
+      generic_name: z.string().min(2),
+      brand_names: z.array(z.string()).default([]),
+      stock_qty: z.coerce.number().int().min(0),
+      location: z.string().min(2),
+      alternatives: z.array(z.string()).default([]),
+    })
+    .safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Invalid medicine payload.' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('medicines')
+    .insert({ ...parsed.data, updated_at: new Date().toISOString() })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ message: error.message });
+  }
+
+  return res.status(201).json({ item: data });
+});
+
 router.patch('/:id', requireOperationalUser, async (req: AuthedRequest, res) => {
   try {
     assertAdminMutationForResource(req.authUser, 'medicines', req.method);

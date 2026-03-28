@@ -7,6 +7,7 @@ export const VisionPanel = () => {
   const { readOnly } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState('');
+  const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,6 +18,7 @@ export const VisionPanel = () => {
 
     setLoading(true);
     setError('');
+    setResult('');
 
     try {
       const formData = new FormData();
@@ -45,13 +47,18 @@ export const VisionPanel = () => {
           type="file"
           accept="image/*"
           disabled={readOnly}
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          onChange={(event) => {
+            const nextFile = event.target.files?.[0] ?? null;
+            setFile(nextFile);
+            setFileName(nextFile?.name ?? '');
+          }}
         />
         <button type="button" onClick={handleUpload} disabled={readOnly || !file || loading}>
           {loading ? 'Analyzing...' : 'Transcribe Photo'}
         </button>
       </div>
 
+      {fileName ? <p className="helper-text">Selected image: {fileName}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
       {result ? <pre className="result-box">{result}</pre> : null}
     </section>

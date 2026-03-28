@@ -47,12 +47,6 @@ router.get('/', async (req: AuthedRequest, res) => {
 });
 
 router.post('/', async (req: AuthedRequest, res) => {
-  try {
-    assertAdminMutationForResource(req.authUser, 'queue', req.method);
-  } catch (error) {
-    return rbacError(res, error);
-  }
-
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();

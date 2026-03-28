@@ -1,14 +1,42 @@
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { Machine } from '../types';
 
 export const AdminMachineTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [machines, setMachines] = useState<Machine[]>([]);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [drafts, setDrafts] = useState<Record<string, { status: Machine['status']; quantity: string; location: string }>>({});
+  const [form, setForm] = useState({
+    name: '',
+    category: '',
+    location: '',
+    quantity: '0',
+    status: 'available',
+    notes: '',
+  });
 
   const loadMachines = async () => {
-    const data = await api.get<{ items: Machine[] }>('/machines');
-    setMachines(data.items);
+    try {
+      const data = await api.get<{ items: Machine[] }>('/machines');
+      setMachines(data.items);
+      setDrafts(
+        Object.fromEntries(
+          data.items.map((machine) => [
+            machine.id,
+            { status: machine.status, quantity: String(machine.quantity), location: machine.location },
+          ]),
+        ),
+      );
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load machines');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -19,6 +47,27 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
     void loadMachines();
   });
 
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    try {
+      await api.post('/machines', { ...form, quantity: Number(form.quantity) }, token);
+      setForm({
+        name: '',
+        category: '',
+        location: '',
+        quantity: '0',
+        status: 'available',
+        notes: '',
+      });
+      setMessage('Machine added');
+      await loadMachines();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to add machine');
+    }
+  };
+
   return (
     <section className="panel">
       <div className="panel-heading">
@@ -27,6 +76,24 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
           <h2>Update hospital machine availability and quantity</h2>
         </div>
       </div>
+
+      <form className="admin-create-form" onSubmit={(event) => void handleSubmit(event)}>
+        <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Machine name" required disabled={readOnly} />
+        <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Category" required disabled={readOnly} />
+        <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Location" required disabled={readOnly} />
+        <input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} placeholder="Quantity" required disabled={readOnly} />
+        <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Machine['status'] }))} disabled={readOnly}>
+          <option value="available">Available</option>
+          <option value="in_use">In use</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+        <input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Notes" disabled={readOnly} />
+        <button type="submit" disabled={readOnly}>Add Machine</button>
+      </form>
+
+      {message ? <p className="success-text">{message}</p> : null}
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading machines...</p> : null}
 
       <div className="stack-list">
         {machines.map((machine) => (
@@ -37,17 +104,14 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
                 <p>{machine.location}</p>
               </div>
               <select
-                defaultValue={machine.status}
+                value={drafts[machine.id]?.status ?? machine.status}
                 disabled={readOnly}
                 onChange={(event) => {
-                  if (readOnly) {
-                    return;
-                  }
-                  void api.patch(`/machines/${machine.id}`, {
-                    status: event.target.value,
-                    quantity: machine.quantity,
-                    location: machine.location,
-                  }, token).then(() => loadMachines());
+                  const value = event.target.value as Machine['status'];
+                  setDrafts((current) => ({
+                    ...current,
+                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), status: value },
+                  }));
                 }}
               >
                 <option value="available">Available</option>
@@ -59,33 +123,51 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
               <input
                 type="number"
                 min="0"
-                defaultValue={machine.quantity}
+                value={drafts[machine.id]?.quantity ?? String(machine.quantity)}
                 disabled={readOnly}
-                onBlur={(event) => {
-                  if (readOnly) {
-                    return;
-                  }
-                  void api.patch(`/machines/${machine.id}`, {
-                    status: machine.status,
-                    quantity: Number(event.target.value),
-                    location: machine.location,
-                  }, token).then(() => loadMachines());
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDrafts((current) => ({
+                    ...current,
+                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), quantity: value },
+                  }));
                 }}
               />
               <input
-                defaultValue={machine.location}
+                value={drafts[machine.id]?.location ?? machine.location}
                 disabled={readOnly}
-                onBlur={(event) => {
-                  if (readOnly) {
-                    return;
-                  }
-                  void api.patch(`/machines/${machine.id}`, {
-                    status: machine.status,
-                    quantity: machine.quantity,
-                    location: event.target.value,
-                  }, token).then(() => loadMachines());
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDrafts((current) => ({
+                    ...current,
+                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), location: value },
+                  }));
                 }}
               />
+              <button
+                type="button"
+                disabled={readOnly}
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      setError('');
+                      setMessage('');
+                      const draft = drafts[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location };
+                      await api.patch(`/machines/${machine.id}`, {
+                        status: draft.status,
+                        quantity: Number(draft.quantity),
+                        location: draft.location,
+                      }, token);
+                      setMessage(`${machine.name} updated`);
+                      await loadMachines();
+                    } catch (updateError) {
+                      setError(updateError instanceof Error ? updateError.message : 'Unable to update machine');
+                    }
+                  })();
+                }}
+              >
+                Save
+              </button>
             </div>
           </article>
         ))}

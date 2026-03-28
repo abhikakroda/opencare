@@ -258,6 +258,337 @@ select {
   gap: 0.7rem;
 }
 
+.app-frame {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.sidebar {
+  position: sticky;
+  top: 1.25rem;
+  align-self: start;
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+}
+
+.sidebar-brand,
+.sidebar-brand-copy,
+.sidebar-group,
+.sidebar-nav,
+.sidebar-footer,
+.main-shell,
+.content-shell,
+.hero-bento,
+.hero-cta-row,
+.hero-chip-row,
+.page-insights,
+.search-shell,
+.mobile-dock,
+.mobile-dock-link {
+  display: grid;
+}
+
+.sidebar-brand {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.large-mark {
+  width: 50px;
+  height: 50px;
+}
+
+.sidebar-brand-copy {
+  gap: 0.1rem;
+}
+
+.sidebar-brand-copy strong {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  color: var(--ink);
+}
+
+.sidebar-brand-copy span,
+.sidebar-label,
+.sidebar-note span,
+.page-insight-card span,
+.page-insight-card small,
+.hero-metric p,
+.hero-metric span {
+  color: var(--muted);
+}
+
+.sidebar-group {
+  gap: 0.65rem;
+}
+
+.sidebar-label {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  gap: 0.45rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 18px;
+  color: var(--muted);
+}
+
+.sidebar-link.active {
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+}
+
+.sidebar-note {
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(229, 234, 254, 0.55);
+}
+
+.main-shell {
+  gap: 1rem;
+}
+
+.content-shell {
+  gap: 1rem;
+}
+
+.refined-topbar {
+  position: sticky;
+  top: 1.25rem;
+  z-index: 20;
+}
+
+.search-shell {
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(245, 246, 252, 0.85);
+}
+
+.compact-topnav {
+  gap: 0.35rem;
+}
+
+.compact-topnav a {
+  padding-inline: 1rem;
+}
+
+.clinical-hero,
+.page-hero {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+}
+
+.hero-cta-row {
+  gap: 0.85rem;
+}
+
+.hero-primary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  padding: 0.85rem 1rem;
+  border-radius: 18px;
+  background: #121933;
+  color: #fffdf8;
+}
+
+.hero-chip-row {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 0.65rem;
+}
+
+.hero-chip-row span {
+  padding: 0.65rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(229, 234, 254, 0.78);
+  color: var(--primary-deep);
+}
+
+.hero-bento {
+  gap: 0.85rem;
+}
+
+.hero-metric {
+  padding: 1rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(136, 149, 188, 0.16);
+}
+
+.hero-metric strong,
+.page-insight-card strong {
+  color: var(--ink);
+}
+
+.hero-metric-primary {
+  background: linear-gradient(135deg, rgba(61, 91, 224, 0.16), rgba(255, 255, 255, 0.72));
+}
+
+.editorial-card {
+  gap: 0.7rem;
+}
+
+.editorial-card-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(229, 234, 254, 0.9);
+  color: var(--primary-deep);
+}
+
+.pill-subnav a {
+  padding: 0.65rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--muted);
+}
+
+.pill-subnav a.active {
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+}
+
+.scroll-subnav {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 0.15rem;
+}
+
+.scroll-subnav::-webkit-scrollbar {
+  display: none;
+}
+
+.page-insights {
+  gap: 0.75rem;
+}
+
+.page-insight-card {
+  gap: 0.2rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(136, 149, 188, 0.16);
+}
+
+.role-switcher {
+  justify-content: flex-end;
+}
+
+.access-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.user-switch-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.switch-chip {
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.switch-chip.active {
+  background: #121933;
+  color: #fffdf8;
+}
+
+.access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.action-insight button {
+  margin-top: 0.45rem;
+}
+
+.mobile-dock {
+  display: none;
+}
+
+.mobile-dock-link {
+  place-items: center;
+  gap: 0.2rem;
+  padding: 0.65rem 0.4rem;
+  color: var(--muted);
+}
+
+.mobile-dock-link.active {
+  color: var(--primary-deep);
+}
+
+@media (max-width: 980px) {
+  .app-frame {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .clinical-hero,
+  .page-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    display: none;
+  }
+
+  .app-frame {
+    padding: 0.9rem;
+  }
+
+  .topbar {
+    position: static;
+  }
+
+  .mobile-dock {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: sticky;
+    bottom: 0.75rem;
+    padding: 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--shadow);
+  }
+}
+
 .subnav a {
   padding: 0.75rem 1rem;
   border-radius: 999px;
@@ -401,6 +732,41 @@ select {
 .medicine-grid {
   display: grid;
   gap: 0.8rem;
+}
+
+.admin-create-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.helper-text,
+.success-text {
+  margin-top: 0.75rem;
+}
+
+.helper-text {
+  color: var(--muted);
+}
+
+.success-text {
+  color: var(--primary-deep);
+}
+
+.empty-state {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  border: 1px dashed rgba(128, 144, 185, 0.36);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.empty-state strong,
+.empty-state p {
+  margin: 0;
 }
 
 .queue-item,

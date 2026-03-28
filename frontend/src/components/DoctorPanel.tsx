@@ -13,10 +13,19 @@ const getDoctorTone = (status: Doctor['status']) => {
 export const DoctorPanel = () => {
   const [search, setSearch] = useState('');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadDoctors = async () => {
-    const data = await api.get<{ items: Doctor[] }>(`/doctors?search=${encodeURIComponent(search)}`);
-    setDoctors(data.items);
+    try {
+      const data = await api.get<{ items: Doctor[] }>(`/doctors?search=${encodeURIComponent(search)}`);
+      setDoctors(data.items);
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load doctors');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -44,6 +53,15 @@ export const DoctorPanel = () => {
           placeholder="Search doctor, department, or specialization"
         />
       </label>
+
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading doctor directory...</p> : null}
+      {!loading && doctors.length === 0 ? (
+        <div className="empty-state">
+          <strong>No doctors matched your search.</strong>
+          <p>Search by doctor name, department, or specialization.</p>
+        </div>
+      ) : null}
 
       <div className="feature-grid">
         {doctors.map((doctor) => (

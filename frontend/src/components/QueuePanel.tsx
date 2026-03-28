@@ -28,11 +28,19 @@ export const QueuePanel = () => {
   });
   const [latestToken, setLatestToken] = useState<{ token: string; position: number; eta: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [message, setMessage] = useState('');
 
   const loadQueue = async () => {
-    const data = await api.get<QueueResponse>(`/queue?department=${encodeURIComponent(department)}`);
-    setQueue(data);
+    try {
+      const data = await api.get<QueueResponse>(`/queue?department=${encodeURIComponent(department)}`);
+      setQueue(data);
+      setMessage('');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to load queue');
+    } finally {
+      setInitialLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -123,6 +131,15 @@ export const QueuePanel = () => {
       ) : null}
 
       {message ? <p className="error-text">{message}</p> : null}
+
+      {initialLoading ? <p className="helper-text">Loading live queue...</p> : null}
+
+      {!initialLoading && waitingList.length === 0 ? (
+        <div className="empty-state">
+          <strong>No active queue for this department.</strong>
+          <p>Book the first token to start the live list.</p>
+        </div>
+      ) : null}
 
       <div className="queue-list">
         {waitingList.map((item, index) => (

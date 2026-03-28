@@ -18,10 +18,19 @@ export const BedPanel = () => {
     items: [],
     summary: { available: 0, occupied: 0, cleaning: 0 },
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadBeds = async () => {
-    const data = await api.get<BedResponse>('/beds');
-    setBedData(data);
+    try {
+      const data = await api.get<BedResponse>('/beds');
+      setBedData(data);
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load beds');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -51,6 +60,15 @@ export const BedPanel = () => {
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.cleaning} cleaning</span></div>
         </div>
       </div>
+
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading ward occupancy...</p> : null}
+      {!loading && bedData.items.length === 0 ? (
+        <div className="empty-state">
+          <strong>No bed data available.</strong>
+          <p>Bed and ward records will appear here as soon as they are added.</p>
+        </div>
+      ) : null}
 
       {Object.entries(grouped).map(([ward, beds]) => (
         <div key={ward} className="ward-section">

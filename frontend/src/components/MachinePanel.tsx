@@ -13,10 +13,19 @@ const getMachineTone = (status: Machine['status']) => {
 export const MachinePanel = () => {
   const [search, setSearch] = useState('');
   const [machines, setMachines] = useState<Machine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadMachines = async () => {
-    const data = await api.get<{ items: Machine[] }>(`/machines?search=${encodeURIComponent(search)}`);
-    setMachines(data.items);
+    try {
+      const data = await api.get<{ items: Machine[] }>(`/machines?search=${encodeURIComponent(search)}`);
+      setMachines(data.items);
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load machines');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -44,6 +53,15 @@ export const MachinePanel = () => {
           placeholder="Search MRI, ventilator, dialysis, CT scanner"
         />
       </label>
+
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading machine inventory...</p> : null}
+      {!loading && machines.length === 0 ? (
+        <div className="empty-state">
+          <strong>No machines matched your search.</strong>
+          <p>Try equipment name, category, or location.</p>
+        </div>
+      ) : null}
 
       <div className="feature-grid">
         {machines.map((machine) => (

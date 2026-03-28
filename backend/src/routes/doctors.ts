@@ -1,7 +1,6 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { assertAdminMutationForResource } from '../lib/rbac.js';
-import { forbiddenIfNotDoctorDirectory } from '../lib/routeGuards.js';
 import { requireSupabase } from '../lib/supabase.js';
 import { requireOperationalUser } from '../middleware/auth.js';
 import type { AuthedRequest } from '../middleware/resolveUser.js';
@@ -14,13 +13,6 @@ const rbacError = (res: Response, error: unknown) => {
 };
 
 router.get('/', async (req: AuthedRequest, res) => {
-  try {
-    forbiddenIfNotDoctorDirectory(req.authUser);
-  } catch (err) {
-    const e = err as Error & { status?: number };
-    return res.status(e.status ?? 403).json({ message: e.message });
-  }
-
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();
@@ -47,6 +39,49 @@ router.get('/', async (req: AuthedRequest, res) => {
   });
 
   return res.json({ items });
+});
+
+router.post('/', requireOperationalUser, async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'doctors', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = requireSupabase();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Supabase is not configured.';
+    return res.status(503).json({ message });
+  }
+
+  const parsed = z
+    .object({
+      name: z.string().min(2),
+      department: z.string().min(2),
+      specialization: z.string().min(2),
+      status: z.enum(['available', 'busy', 'off_duty']),
+      room: z.string().min(1),
+      next_slot: z.string().min(1),
+    })
+    .safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Invalid doctor payload.' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('doctors')
+    .insert({ ...parsed.data, updated_at: new Date().toISOString() })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ message: error.message });
+  }
+
+  return res.status(201).json({ item: data });
 });
 
 router.patch('/:id', requireOperationalUser, async (req: AuthedRequest, res) => {

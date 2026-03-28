@@ -7,10 +7,20 @@ import type { QueueItem } from '../types';
 export const AdminQueueTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [department, setDepartment] = useState(departments[0]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const loadQueue = async () => {
-    const data = await api.get<{ items: QueueItem[] }>(`/queue?department=${encodeURIComponent(department)}`);
-    setQueue(data.items);
+    try {
+      const data = await api.get<{ items: QueueItem[] }>(`/queue?department=${encodeURIComponent(department)}`);
+      setQueue(data.items);
+      setError('');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load queue');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -20,6 +30,19 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
   useRealtimeTable('queue_items', () => {
     void loadQueue();
   });
+
+  const handleAction = async (runner: () => Promise<unknown>, successText: string) => {
+    setError('');
+    setMessage('');
+
+    try {
+      await runner();
+      setMessage(successText);
+      await loadQueue();
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Action failed');
+    }
+  };
 
   return (
     <section className="panel">
@@ -31,11 +54,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
       </div>
 
       <div className="grid-form">
-        <select
-          value={department}
-          disabled={readOnly}
-          onChange={(event) => setDepartment(event.target.value)}
-        >
+        <select value={department} disabled={readOnly} onChange={(event) => setDepartment(event.target.value)}>
           {departments.map((item) => (
             <option key={item} value={item}>
               {item}
@@ -46,12 +65,23 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
           type="button"
           disabled={readOnly}
           onClick={() => {
-            void api.post('/queue/call-next', { department }, token).then(() => loadQueue());
+            void handleAction(() => api.post('/queue/call-next', { department }, token), 'Next patient called');
           }}
         >
           Call Next
         </button>
       </div>
+
+      {message ? <p className="success-text">{message}</p> : null}
+      {error ? <p className="error-text">{error}</p> : null}
+      {loading ? <p className="helper-text">Loading department queue...</p> : null}
+
+      {!loading && queue.length === 0 ? (
+        <div className="empty-state">
+          <strong>No queue items in this department.</strong>
+          <p>New patient tokens will appear here automatically.</p>
+        </div>
+      ) : null}
 
       <div className="stack-list">
         {queue.map((item) => (
@@ -65,7 +95,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
                 type="button"
                 disabled={readOnly}
                 onClick={() => {
-                  void api.patch(`/queue/${item.id}/status`, { status: 'called' }, token).then(() => loadQueue());
+                  void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'called' }, token), `${item.token_number} marked called`);
                 }}
               >
                 Call
@@ -74,7 +104,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
                 type="button"
                 disabled={readOnly}
                 onClick={() => {
-                  void api.patch(`/queue/${item.id}/status`, { status: 'done' }, token).then(() => loadQueue());
+                  void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'done' }, token), `${item.token_number} marked done`);
                 }}
               >
                 Done

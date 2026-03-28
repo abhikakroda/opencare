@@ -38,6 +38,53 @@ router.get('/', async (_req, res) => {
   });
 });
 
+router.post('/', requireOperationalUser, async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'beds', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = requireSupabase();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Supabase is not configured.';
+    return res.status(503).json({ message });
+  }
+
+  const parsed = z
+    .object({
+      ward: z.string().min(1),
+      bed_number: z.string().min(1),
+      status: z.enum(['available', 'occupied', 'cleaning']),
+      patient_name: z.string().nullable().optional(),
+    })
+    .safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Invalid bed payload.' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('beds')
+    .insert({
+      ward: parsed.data.ward,
+      bed_number: parsed.data.bed_number,
+      status: parsed.data.status,
+      patient_name: parsed.data.patient_name ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ message: error.message });
+  }
+
+  return res.status(201).json({ item: data });
+});
+
 router.patch('/:id', requireOperationalUser, async (req: AuthedRequest, res) => {
   try {
     assertAdminMutationForResource(req.authUser, 'beds', req.method);
