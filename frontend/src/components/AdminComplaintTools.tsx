@@ -10,6 +10,7 @@ export const AdminComplaintTools = ({ token, readOnly = false }: { token: string
   const [statusFilter, setStatusFilter] = useState<'all' | ComplaintStatus>('all');
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const openCount = complaints.filter((complaint) => complaint.status === 'open').length;
@@ -42,11 +43,14 @@ export const AdminComplaintTools = ({ token, readOnly = false }: { token: string
     setMessage('');
 
     try {
+      setSavingId(complaint.id);
       await api.patch(`/complaints/${complaint.id}`, { status, admin_note: complaint.admin_note ?? '' }, token);
       setMessage(`${complaint.subject} marked ${status.replace('_', ' ')}`);
       await loadComplaints();
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : 'Unable to update complaint');
+    } finally {
+      setSavingId(null);
     }
   };
 
@@ -119,12 +123,12 @@ export const AdminComplaintTools = ({ token, readOnly = false }: { token: string
                   key={status}
                   type="button"
                   className="secondary-button"
-                  disabled={readOnly || complaint.status === status}
+                  disabled={readOnly || complaint.status === status || savingId === complaint.id}
                   onClick={() => {
                     void handleStatusUpdate(complaint, status);
                   }}
                 >
-                  {status.replace('_', ' ')}
+                  {savingId === complaint.id && complaint.status !== status ? 'Saving...' : status.replace('_', ' ')}
                 </button>
               ))}
             </div>

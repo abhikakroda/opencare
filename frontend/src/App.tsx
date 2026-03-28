@@ -179,23 +179,12 @@ const AppFrame = ({
             <Search size={16} />
             <span>{activeSection}</span>
           </div>
-          <nav className="topnav compact-topnav role-switcher" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <nav className="topnav compact-topnav role-switcher topbar-actions">
             <NavLink to="/">Patient</NavLink>
             {adminToken ? (
               <>
                 <NavLink to="/admin">Admin Panel</NavLink>
-                <button 
-                  type="button" 
-                  onClick={handleShellLogout} 
-                  style={{ 
-                    background: 'transparent', 
-                    color: 'var(--danger)', 
-                    border: 'none', 
-                    padding: '0.4rem 0.8rem',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
+                <button type="button" onClick={handleShellLogout} className="shell-logout">
                   Logout
                 </button>
               </>
@@ -516,13 +505,13 @@ const AccessPortal = ({
 }) => {
   return (
     <main className="page-shell centered-shell">
-      {adminToken ? (
-        <section className="panel access-panel centered-panel">
-          <h2>Staff Session Active</h2>
-          <Link className="primary-button" to="/admin" style={{ display: 'inline-flex', marginTop: '1rem' }}>
+        {adminToken ? (
+          <section className="panel access-panel centered-panel">
+            <h2>Staff Session Active</h2>
+          <Link className="primary-button access-panel-link" to="/admin">
             Open Admin Panel
           </Link>
-        </section>
+          </section>
       ) : (
         <AdminLogin onLogin={onLogin} notice={authNotice} />
       )}

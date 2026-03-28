@@ -23,11 +23,13 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const response = await api.post<AdminSession>('/auth/login', { email, password });
@@ -35,6 +37,8 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
       navigate('/admin');
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,8 +52,14 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
         </div>
       </div>
 
+      <div className="admin-login-meta">
+        <span className="badge">Admin</span>
+        <span className="badge">Staff</span>
+        <span className="badge">Nodal Officer</span>
+      </div>
+
       {notice ? (
-        <div className="empty-state">
+        <div className="admin-callout admin-callout-info">
           <strong>Session notice</strong>
           <p>{notice}</p>
         </div>
@@ -65,13 +75,13 @@ export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
           <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Enter password" required />
         </label>
         <div className="action-row">
-          <button type="submit">Open admin workspace</button>
+          <button type="submit" disabled={loading}>{loading ? 'Opening workspace...' : 'Open admin workspace'}</button>
           <span className="helper-text">Protected access for hospital operations.</span>
         </div>
       </form>
 
       {error ? (
-        <div className="empty-state">
+        <div className="admin-callout admin-callout-error">
           <strong>Login failed</strong>
           <p>{error}</p>
         </div>

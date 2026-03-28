@@ -13,6 +13,19 @@ const rbacError = (res: Response, error: unknown) => {
   return res.status(err.status ?? 500).json({ message: err.message });
 };
 
+const isMissingQueueProfileColumns = (message: string) =>
+  message.includes("Could not find the 'aadhaar_number' column") ||
+  message.includes("Could not find the 'patient_phone' column") ||
+  message.includes("Could not find the 'patient_age' column") ||
+  message.includes("Could not find the 'patient_gender' column") ||
+  message.includes('column "aadhaar_number" does not exist') ||
+  message.includes('column "patient_phone" does not exist') ||
+  message.includes('column "patient_age" does not exist') ||
+  message.includes('column "patient_gender" does not exist');
+
+const isMissingQueueTable = (message: string) =>
+  message.includes("Could not find the table 'public.queue_items'") || message.includes('relation "public.queue_items" does not exist');
+
 router.get('/', async (req: AuthedRequest, res) => {
   let supabaseAdmin;
   try {
@@ -31,6 +44,9 @@ router.get('/', async (req: AuthedRequest, res) => {
 
   const { data, error } = await query;
   if (error) {
+    if (isMissingQueueTable(error.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
     return res.status(500).json({ message: error.message });
   }
 
@@ -57,8 +73,19 @@ router.post('/', async (req: AuthedRequest, res) => {
 
   const parsed = z
     .object({
-      patient_name: z.string().min(2),
-      department: z.string().min(2),
+      patient_name: z.string().trim().min(2),
+      department: z.string().trim().min(2),
+      patient_phone: z.string().trim().min(10).max(20),
+      patient_age: z.coerce.number().int().min(0).max(120),
+      patient_gender: z.enum(['male', 'female', 'other']),
+      aadhaar_number: z
+        .string()
+        .trim()
+        .min(12)
+        .max(16)
+        .optional()
+        .or(z.literal(''))
+        .transform(value => value || null),
     })
     .safeParse(req.body);
 
@@ -72,6 +99,9 @@ router.post('/', async (req: AuthedRequest, res) => {
     .eq('department', parsed.data.department);
 
   if (countError) {
+    if (isMissingQueueTable(countError.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
     return res.status(500).json({ message: countError.message });
   }
 
@@ -81,6 +111,10 @@ router.post('/', async (req: AuthedRequest, res) => {
     .insert({
       patient_name: parsed.data.patient_name,
       department: parsed.data.department,
+      patient_phone: parsed.data.patient_phone,
+      patient_age: parsed.data.patient_age,
+      patient_gender: parsed.data.patient_gender,
+      aadhaar_number: parsed.data.aadhaar_number,
       token_number: tokenNumber,
       status: 'waiting',
     })
@@ -88,6 +122,14 @@ router.post('/', async (req: AuthedRequest, res) => {
     .single();
 
   if (error) {
+    if (isMissingQueueTable(error.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
+    if (isMissingQueueProfileColumns(error.message)) {
+      return res.status(503).json({
+        message: 'Queue profile fields are not available yet. Add Aadhaar, mobile, age, and gender columns to queue_items in Supabase first.',
+      });
+    }
     return res.status(500).json({ message: error.message });
   }
 
@@ -128,6 +170,9 @@ router.post('/call-next', requireOperationalUser, async (req: AuthedRequest, res
     .maybeSingle();
 
   if (fetchError) {
+    if (isMissingQueueTable(fetchError.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
     return res.status(500).json({ message: fetchError.message });
   }
 
@@ -143,6 +188,9 @@ router.post('/call-next', requireOperationalUser, async (req: AuthedRequest, res
     .single();
 
   if (error) {
+    if (isMissingQueueTable(error.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
     return res.status(500).json({ message: error.message });
   }
 
@@ -182,6 +230,9 @@ router.patch('/:id/status', requireOperationalUser, async (req: AuthedRequest, r
     .single();
 
   if (error) {
+    if (isMissingQueueTable(error.message)) {
+      return res.status(503).json({ message: 'Queue storage is not available yet. Create the queue_items table in Supabase first.' });
+    }
     return res.status(500).json({ message: error.message });
   }
 

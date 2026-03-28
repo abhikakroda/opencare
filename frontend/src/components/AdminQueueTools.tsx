@@ -105,7 +105,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
             <span>Queue action</span>
             <button
               type="button"
-              disabled={readOnly}
+              disabled={readOnly || loading}
               onClick={() => {
                 void handleAction(() => api.post('/queue/call-next', { department }, token), 'Next patient called');
               }}
@@ -160,13 +160,16 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
             </div>
             <div className="action-row" style={{ marginTop: '-0.1rem' }}>
               <span className="badge">Department: {item.department}</span>
+              {item.patient_phone ? <span className="badge">Mobile: {item.patient_phone}</span> : null}
+              {item.patient_age ? <span className="badge">Age: {item.patient_age}</span> : null}
+              {item.patient_gender ? <span className="badge">Gender: {item.patient_gender}</span> : null}
               <span className="badge">Queued at {new Date(item.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
             </div>
             {item.status !== 'done' ? (
               <div className="action-row">
                 <button
                   type="button"
-                  disabled={readOnly}
+                  disabled={readOnly || loading}
                   onClick={() => {
                     void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'called' }, token), `${item.token_number} marked called`);
                   }}
@@ -175,7 +178,7 @@ export const AdminQueueTools = ({ token, readOnly = false }: { token: string; re
                 </button>
                 <button
                   type="button"
-                  disabled={readOnly}
+                  disabled={readOnly || loading}
                   onClick={() => {
                     void handleAction(() => api.patch(`/queue/${item.id}/status`, { status: 'done' }, token), `${item.token_number} marked done`);
                   }}

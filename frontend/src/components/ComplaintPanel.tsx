@@ -92,6 +92,18 @@ export const ComplaintPanel = () => {
     }
   };
 
+  const handleTrackIdChange = (value: string) => {
+    setTrackId(value);
+    setTrackError('');
+    setTrackedComplaint(null);
+  };
+
+  const handleTrackPhoneChange = (value: string) => {
+    setTrackPhone(value);
+    setTrackError('');
+    setTrackedComplaint(null);
+  };
+
   return (
     <section className="panel accent-panel">
       <div className="panel-heading">
@@ -222,11 +234,11 @@ export const ComplaintPanel = () => {
           >
             <label className="form-field">
               <span>Complaint ID</span>
-              <input value={trackId} onChange={(event) => setTrackId(event.target.value)} placeholder="Paste complaint ID" />
+              <input value={trackId} onChange={(event) => handleTrackIdChange(event.target.value)} placeholder="Paste complaint ID" />
             </label>
             <label className="form-field">
               <span>Phone</span>
-              <input value={trackPhone} onChange={(event) => setTrackPhone(event.target.value)} placeholder="Optional phone number" />
+              <input value={trackPhone} onChange={(event) => handleTrackPhoneChange(event.target.value)} placeholder="Optional phone number" />
             </label>
           </div>
 

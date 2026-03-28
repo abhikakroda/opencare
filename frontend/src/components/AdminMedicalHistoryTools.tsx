@@ -49,6 +49,24 @@ export const AdminMedicalHistoryTools = ({ token, readOnly = false }: { token: s
   });
 
   const handleCreate = async () => {
+    const patientName = form.patient_name.trim();
+    const phone = form.phone.trim();
+    const diagnosis = form.diagnosis.trim();
+    if (patientName.length < 2) {
+      setError('Patient name must be at least 2 characters.');
+      setMessage('');
+      return;
+    }
+    if (phone.length < 10) {
+      setError('Enter a valid mobile number.');
+      setMessage('');
+      return;
+    }
+    if (diagnosis.length < 3) {
+      setError('Diagnosis must be at least 3 characters.');
+      setMessage('');
+      return;
+    }
     setSaving(true);
     setError('');
     setMessage('');
@@ -58,6 +76,9 @@ export const AdminMedicalHistoryTools = ({ token, readOnly = false }: { token: s
         '/medical-history',
         {
           ...form,
+          patient_name: patientName,
+          phone,
+          diagnosis,
           medicines: form.medicines.split(',').map((item) => item.trim()).filter(Boolean),
           allergies: form.allergies.split(',').map((item) => item.trim()).filter(Boolean),
         },

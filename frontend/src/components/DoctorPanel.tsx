@@ -20,6 +20,7 @@ export const DoctorPanel = () => {
   const offDutyCount = doctors.filter((doctor) => doctor.status === 'off_duty').length;
 
   const loadDoctors = async () => {
+    setLoading(true);
     try {
       const data = await api.get<{ items: Doctor[] }>(`/doctors?search=${encodeURIComponent(search)}`);
       setDoctors(data.items);

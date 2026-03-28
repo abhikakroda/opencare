@@ -131,7 +131,7 @@ export const VisionPanel = () => {
               <button type="button" onClick={handleUpload} disabled={!file || loading}>
                 {loading ? 'Analyzing...' : 'Transcribe Photo'}
               </button>
-              <button type="button" className="secondary-button" onClick={resetSelection} disabled={loading && !file}>
+              <button type="button" className="secondary-button" onClick={resetSelection} disabled={loading || (!file && !result)}>
                 <RotateCcw size={16} />
                 Clear
               </button>
@@ -149,6 +149,7 @@ export const VisionPanel = () => {
                 const nextFile = event.target.files?.[0] ?? null;
                 setFile(nextFile);
                 setFileName(nextFile?.name ?? '');
+                setResult('');
                 setError('');
                 setCopied(false);
               }}

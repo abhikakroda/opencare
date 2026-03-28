@@ -9,6 +9,7 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: '',
@@ -41,7 +42,15 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
     try {
       const data = await api.get<{ items: Medicine[] }>('/medicines');
       setMedicines(data.items);
-      setDrafts(Object.fromEntries(data.items.map((medicine) => [medicine.id, String(medicine.stock_qty)])));
+      setDrafts((current) => {
+        const next = { ...current };
+        data.items.forEach((medicine) => {
+          if (next[medicine.id] === undefined) {
+            next[medicine.id] = String(medicine.stock_qty);
+          }
+        });
+        return next;
+      });
       setError('');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load medicines');
@@ -216,11 +225,11 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
               <div className="grid-form">
                 <label className="form-field">
                   <span>Update stock</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={drafts[medicine.id] ?? String(medicine.stock_qty)}
-                    disabled={readOnly}
+                <input
+                  type="number"
+                  min="0"
+                  value={drafts[medicine.id] ?? String(medicine.stock_qty)}
+                  disabled={readOnly}
                     onChange={(event) => {
                       const value = event.target.value;
                       setDrafts((current) => ({
@@ -232,10 +241,11 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
                 </label>
                 <button
                   type="button"
-                  disabled={readOnly}
+                  disabled={readOnly || savingId === medicine.id}
                   onClick={() => {
                     void (async () => {
                       try {
+                        setSavingId(medicine.id);
                         setError('');
                         setMessage('');
                         const stock_qty = Number(drafts[medicine.id] ?? medicine.stock_qty);
@@ -244,14 +254,21 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
                         }
                         await api.patch(`/medicines/${medicine.id}`, { stock_qty, location: medicine.location }, token);
                         setMessage(`${medicine.name} updated`);
+                        setDrafts((current) => {
+                          const next = { ...current };
+                          delete next[medicine.id];
+                          return next;
+                        });
                         await loadMedicines();
                       } catch (updateError) {
                         setError(updateError instanceof Error ? updateError.message : 'Unable to update medicine');
+                      } finally {
+                        setSavingId(null);
                       }
                     })();
                   }}
                 >
-                  Save stock
+                  {savingId === medicine.id ? 'Saving...' : 'Save stock'}
                 </button>
               </div>
             </div>

@@ -8,6 +8,10 @@ export type QueueItem = {
   id: string;
   patient_name: string;
   department: string;
+  patient_phone?: string | null;
+  patient_age?: number | null;
+  patient_gender?: 'male' | 'female' | 'other' | null;
+  aadhaar_number?: string | null;
   token_number: string;
   status: QueueStatus;
   created_at: string;

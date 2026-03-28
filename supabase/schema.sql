@@ -3,6 +3,10 @@ create extension if not exists "pgcrypto";
 create table if not exists public.queue_items (
   id uuid primary key default gen_random_uuid(),
   patient_name text not null,
+  patient_phone text,
+  patient_age integer,
+  patient_gender text check (patient_gender in ('male', 'female', 'other')),
+  aadhaar_number text,
   department text not null,
   token_number text not null unique,
   status text not null check (status in ('waiting', 'called', 'done')) default 'waiting',
@@ -10,6 +14,11 @@ create table if not exists public.queue_items (
   called_at timestamptz,
   completed_at timestamptz
 );
+
+alter table public.queue_items add column if not exists patient_phone text;
+alter table public.queue_items add column if not exists patient_age integer;
+alter table public.queue_items add column if not exists patient_gender text;
+alter table public.queue_items add column if not exists aadhaar_number text;
 
 create table if not exists public.medicines (
   id uuid primary key default gen_random_uuid(),

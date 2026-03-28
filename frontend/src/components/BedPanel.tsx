@@ -22,6 +22,7 @@ export const BedPanel = () => {
   const [error, setError] = useState('');
 
   const loadBeds = async () => {
+    setLoading(true);
     try {
       const data = await api.get<BedResponse>('/beds');
       setBedData(data);

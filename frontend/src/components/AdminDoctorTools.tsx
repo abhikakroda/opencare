@@ -9,6 +9,7 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, { status: Doctor['status']; room: string; next_slot: string }>>({});
   const [form, setForm] = useState({
     name: '',
@@ -20,17 +21,19 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
   });
 
   const loadDoctors = async () => {
+    setLoading(true);
     try {
       const data = await api.get<{ items: Doctor[] }>('/doctors');
       setDoctors(data.items);
-      setDrafts(
-        Object.fromEntries(
-          data.items.map((doctor) => [
-            doctor.id,
-            { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot },
-          ]),
-        ),
-      );
+      setDrafts((current) => {
+        const next = { ...current };
+        data.items.forEach((doctor) => {
+          if (next[doctor.id] === undefined) {
+            next[doctor.id] = { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot };
+          }
+        });
+        return next;
+      });
       setError('');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load doctors');
@@ -208,23 +211,32 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
               </label>
               <button
                 type="button"
-                disabled={readOnly}
+                disabled={readOnly || savingId === doctor.id}
                 style={{ alignSelf: 'end' }}
                 onClick={() => {
                   void (async () => {
                     try {
+                      setSavingId(doctor.id);
                       setError('');
                       setMessage('');
-                      await api.patch(`/doctors/${doctor.id}`, drafts[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }, token);
+                      const draft = drafts[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot };
+                      await api.patch(`/doctors/${doctor.id}`, draft, token);
                       setMessage(`${doctor.name} updated`);
+                      setDrafts((current) => {
+                        const next = { ...current };
+                        delete next[doctor.id];
+                        return next;
+                      });
                       await loadDoctors();
                     } catch (updateError) {
                       setError(updateError instanceof Error ? updateError.message : 'Unable to update doctor');
+                    } finally {
+                      setSavingId(null);
                     }
                   })();
                 }}
               >
-                Save changes
+                {savingId === doctor.id ? 'Saving...' : 'Save changes'}
               </button>
             </div>
             </div>

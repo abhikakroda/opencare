@@ -20,6 +20,7 @@ export const MachinePanel = () => {
   const inUseCount = machines.filter((machine) => machine.status === 'in_use').length;
 
   const loadMachines = async () => {
+    setLoading(true);
     try {
       const data = await api.get<{ items: Machine[] }>(`/machines?search=${encodeURIComponent(search)}`);
       setMachines(data.items);

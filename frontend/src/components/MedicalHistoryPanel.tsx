@@ -18,11 +18,21 @@ export const MedicalHistoryPanel = () => {
   const [verified, setVerified] = useState(false);
 
   const handleVerify = async () => {
+    const cleanedPhone = phone.trim();
+    const cleanedOtp = otp.trim();
+    if (!cleanedPhone) {
+      setError('Enter the patient mobile number first.');
+      return;
+    }
+    if (cleanedOtp.length !== 4) {
+      setError('Enter the 4-digit OTP to continue.');
+      return;
+    }
     setLoading(true);
     setError('');
 
     try {
-      const response = await api.post<VerifyResponse>('/medical-history/verify', { phone, otp });
+      const response = await api.post<VerifyResponse>('/medical-history/verify', { phone: cleanedPhone, otp: cleanedOtp });
       setItems(response.items);
       setVerified(response.verified);
     } catch (verifyError) {
@@ -32,6 +42,20 @@ export const MedicalHistoryPanel = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    setVerified(false);
+    setItems([]);
+    setError('');
+  };
+
+  const handleOtpChange = (value: string) => {
+    setOtp(value);
+    setVerified(false);
+    setItems([]);
+    setError('');
   };
 
   return (
@@ -63,11 +87,11 @@ export const MedicalHistoryPanel = () => {
         >
           <label className="form-field">
             <span>Mobile number</span>
-            <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Enter mobile number" />
+            <input value={phone} onChange={(event) => handlePhoneChange(event.target.value)} placeholder="Enter mobile number" />
           </label>
           <label className="form-field">
             <span>OTP</span>
-            <input value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="Enter OTP" maxLength={4} />
+            <input value={otp} onChange={(event) => handleOtpChange(event.target.value)} placeholder="Enter OTP" maxLength={4} />
           </label>
           <button type="button" onClick={() => void handleVerify()} disabled={loading}>
             {loading ? 'Verifying...' : 'Verify & View'}

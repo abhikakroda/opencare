@@ -235,7 +235,77 @@ const complaints = [
   },
 ];
 
-const getErrorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
+const medicalHistories = [
+  {
+    patient_name: 'Ravi Kumar',
+    phone: '9876543210',
+    visit_date: '2026-03-20',
+    department: 'General Medicine',
+    diagnosis: 'Seasonal fever',
+    medicines: ['Paracetamol 650', 'ORS'],
+    allergies: ['Penicillin'],
+    notes: 'Patient recovered after two days of rest.',
+    recorded_by: 'Dr. Arvind Nair',
+  },
+  {
+    patient_name: 'Aisha Khan',
+    phone: '9123456780',
+    visit_date: '2026-03-18',
+    department: 'Cardiology',
+    diagnosis: 'Chest discomfort',
+    medicines: ['Pantoprazole 40'],
+    allergies: [],
+    notes: 'ECG normal, advised diet changes and follow-up.',
+    recorded_by: 'Dr. Meera Joshi',
+  },
+  {
+    patient_name: 'Neha Sharma',
+    phone: '9988776655',
+    visit_date: '2026-03-15',
+    department: 'Orthopedics',
+    diagnosis: 'Knee pain',
+    medicines: ['Pain relief gel'],
+    allergies: ['Ibuprofen'],
+    notes: 'Home exercises and warm compress recommended.',
+    recorded_by: 'Dr. Ravi Menon',
+  },
+];
+
+const getErrorText = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const maybeMessage = (error as { message?: unknown }).message;
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
+  return String(error);
+};
+
+const isMissingTable = (message: string, table: string) =>
+  message.includes(`Could not find the table 'public.${table}'`) || message.includes(`relation "public.${table}" does not exist`);
+
+const runSeed = async (seedName: string, seedAction: () => Promise<number>) => {
+  try {
+    return { seedName, inserted: await seedAction(), skipped: false, failed: false };
+  } catch (error) {
+    const message = getErrorText(error);
+    if (isMissingTable(message, seedName)) {
+      return { seedName, inserted: 0, skipped: true, failed: false };
+    }
+    return { seedName, inserted: 0, skipped: false, failed: true, error: message };
+  }
+};
 
 const seedMedicines = async () => {
   const { data: existing, error } = await supabase.from('medicines').select('name');
@@ -345,36 +415,53 @@ const seedComplaints = async () => {
   return missing.length;
 };
 
+const seedMedicalHistories = async () => {
+  const { data: existing, error } = await supabase.from('medical_histories').select('patient_name, phone, visit_date');
+  if (error) throw error;
+
+  const existingKeys = new Set((existing ?? []).map((item) => `${item.patient_name}:${item.phone}:${item.visit_date}`));
+  const missing = medicalHistories.filter((item) => !existingKeys.has(`${item.patient_name}:${item.phone}:${item.visit_date}`));
+  if (!missing.length) return 0;
+
+  const { error: insertError } = await supabase.from('medical_histories').insert(missing);
+  if (insertError) throw insertError;
+  return missing.length;
+};
+
 const main = async () => {
   try {
-    const [medicineCount, bedCount, doctorCount, machineCount, queueCount, adminUserCount, complaintCount] = await Promise.all([
-      seedMedicines(),
-      seedBeds(),
-      seedDoctors(),
-      seedMachines(),
-      seedQueue(),
-      seedAdminUsers(),
-      seedComplaints(),
+    const results = await Promise.all([
+      runSeed('medicines', seedMedicines),
+      runSeed('beds', seedBeds),
+      runSeed('doctors', seedDoctors),
+      runSeed('machines', seedMachines),
+      runSeed('queue_items', seedQueue),
+      runSeed('admin_users', seedAdminUsers),
+      runSeed('complaints', seedComplaints),
+      runSeed('medical_histories', seedMedicalHistories),
     ]);
+
+    const inserted = Object.fromEntries(results.map((item) => [item.seedName, item.inserted]));
+    const skipped = results.filter((item) => item.skipped).map((item) => item.seedName);
+    const failed = results
+      .filter((item) => item.failed)
+      .map((item) => ({ seedName: item.seedName, error: item.error }));
 
     console.log(
       JSON.stringify(
         {
-          ok: true,
-          inserted: {
-            medicines: medicineCount,
-            beds: bedCount,
-            doctors: doctorCount,
-            machines: machineCount,
-            queue_items: queueCount,
-            admin_users: adminUserCount,
-            complaints: complaintCount,
-          },
+          ok: failed.length === 0,
+          inserted,
+          skipped,
+          failed,
         },
         null,
         2,
       ),
     );
+    if (failed.length > 0) {
+      process.exitCode = 1;
+    }
   } catch (error) {
     console.error(getErrorText(error));
     process.exit(1);

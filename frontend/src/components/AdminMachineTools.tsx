@@ -9,6 +9,7 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, { status: Machine['status']; quantity: string; location: string }>>({});
   const [form, setForm] = useState({
     name: '',
@@ -20,17 +21,19 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
   });
 
   const loadMachines = async () => {
+    setLoading(true);
     try {
       const data = await api.get<{ items: Machine[] }>('/machines');
       setMachines(data.items);
-      setDrafts(
-        Object.fromEntries(
-          data.items.map((machine) => [
-            machine.id,
-            { status: machine.status, quantity: String(machine.quantity), location: machine.location },
-          ]),
-        ),
-      );
+      setDrafts((current) => {
+        const next = { ...current };
+        data.items.forEach((machine) => {
+          if (next[machine.id] === undefined) {
+            next[machine.id] = { status: machine.status, quantity: String(machine.quantity), location: machine.location };
+          }
+        });
+        return next;
+      });
       setError('');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load machines');
@@ -209,11 +212,12 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
               </label>
               <button
                 type="button"
-                disabled={readOnly}
+                disabled={readOnly || savingId === machine.id}
                 style={{ alignSelf: 'end' }}
                 onClick={() => {
                   void (async () => {
                     try {
+                      setSavingId(machine.id);
                       setError('');
                       setMessage('');
                       const draft = drafts[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location };
@@ -223,14 +227,21 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
                         location: draft.location,
                       }, token);
                       setMessage(`${machine.name} updated`);
+                      setDrafts((current) => {
+                        const next = { ...current };
+                        delete next[machine.id];
+                        return next;
+                      });
                       await loadMachines();
                     } catch (updateError) {
                       setError(updateError instanceof Error ? updateError.message : 'Unable to update machine');
+                    } finally {
+                      setSavingId(null);
                     }
                   })();
                 }}
               >
-                Save changes
+                {savingId === machine.id ? 'Saving...' : 'Save changes'}
               </button>
             </div>
             </div>

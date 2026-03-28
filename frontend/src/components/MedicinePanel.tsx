@@ -13,26 +13,38 @@ const getStockTone = (quantity: number): 'stock-ok' | 'stock-low' | 'stock-out' 
 
 export const MedicinePanel = () => {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
   const loadMedicines = async () => {
     try {
-      setLoading(true);
-      const data = await api.get<{ items: Medicine[] }>(`/medicines?search=${encodeURIComponent(search)}`);
+      setRefreshing(true);
+      const query = debouncedSearch.trim();
+      const data = await api.get<{ items: Medicine[] }>(`/medicines?search=${encodeURIComponent(query)}`);
       setMedicines(data.items);
       setError('');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load medicines');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    void loadMedicines();
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 220);
+
+    return () => window.clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    void loadMedicines();
+  }, [debouncedSearch]);
 
   useRealtimeTable('medicines', () => {
     void loadMedicines();
@@ -70,6 +82,9 @@ export const MedicinePanel = () => {
         <div className="mini-stat">
           <span>Out of stock: {stockCounts.out}</span>
         </div>
+        <div className="mini-stat">
+          <span>Live refresh: {refreshing ? 'Updating' : 'Idle'}</span>
+        </div>
       </div>
 
       <label className="search-box">
@@ -82,17 +97,22 @@ export const MedicinePanel = () => {
       </label>
 
       {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p className="helper-text">Loading stock data...</p> : null}
+      {loading ? (
+        <div className="empty-state">
+          <strong>Loading stock data</strong>
+          <p>Refreshing pharmacy records for the latest search.</p>
+        </div>
+      ) : null}
       {!loading && medicines.length === 0 ? (
         <div className="empty-state">
           <strong>No medicine matched your search.</strong>
-          <p>Try a generic name, brand name, or clear the filter.</p>
+          <p>{debouncedSearch.trim() ? 'Try a generic name, brand name, or clear the search box.' : 'Add a medicine to begin browsing the live stock list.'}</p>
         </div>
       ) : null}
 
       <div className="medicine-grid">
         {medicines.map((medicine) => (
-          <article key={medicine.id} className="medicine-card">
+          <article key={medicine.id} className="medicine-card" style={{ gap: '0.8rem' }}>
             <div className="card-head">
               <div>
                 <strong>{medicine.name}</strong>
@@ -100,9 +120,17 @@ export const MedicinePanel = () => {
               </div>
               <StatusBadge tone={getStockTone(medicine.stock_qty)} />
             </div>
-            <p>Brands: {medicine.brand_names.join(', ') || 'N/A'}</p>
+            <div className="action-row" style={{ marginTop: '-0.1rem' }}>
+              <span className="badge">Brands: {medicine.brand_names.length || 0}</span>
+              <span className="badge">Alternatives: {medicine.alternatives.length || 0}</span>
+            </div>
+            <p className="helper-text" style={{ marginTop: '-0.15rem' }}>
+              {medicine.brand_names.length ? medicine.brand_names.join(', ') : 'No brand names recorded.'}
+            </p>
             {medicine.stock_qty <= 0 && medicine.alternatives.length > 0 ? (
-              <p>Alternatives: {medicine.alternatives.join(', ')}</p>
+              <p className="helper-text" style={{ marginTop: '-0.2rem' }}>
+                Alternatives: {medicine.alternatives.join(', ')}
+              </p>
             ) : null}
           </article>
         ))}
