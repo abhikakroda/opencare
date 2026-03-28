@@ -3,7 +3,7 @@ import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { Bed } from '../types';
 
-export const AdminBedTools = ({ token }: { token: string }) => {
+export const AdminBedTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [beds, setBeds] = useState<Bed[]>([]);
   const [patientName, setPatientName] = useState('');
 
@@ -33,6 +33,7 @@ export const AdminBedTools = ({ token }: { token: string }) => {
 
       <input
         value={patientName}
+        disabled={readOnly}
         onChange={(event) => setPatientName(event.target.value)}
         placeholder="Patient name for admit action"
       />
@@ -48,6 +49,7 @@ export const AdminBedTools = ({ token }: { token: string }) => {
                 <div className="action-stack">
                   <button
                     type="button"
+                    disabled={readOnly}
                     onClick={() => {
                       void api.patch(`/beds/${bed.id}`, { action: 'admit', patient_name: patientName || 'Admitted Patient' }, token).then(() => loadBeds());
                     }}
@@ -56,6 +58,7 @@ export const AdminBedTools = ({ token }: { token: string }) => {
                   </button>
                   <button
                     type="button"
+                    disabled={readOnly}
                     onClick={() => {
                       void api.patch(`/beds/${bed.id}`, { action: 'discharge' }, token).then(() => loadBeds());
                     }}
@@ -64,6 +67,7 @@ export const AdminBedTools = ({ token }: { token: string }) => {
                   </button>
                   <button
                     type="button"
+                    disabled={readOnly}
                     onClick={() => {
                       void api.patch(`/beds/${bed.id}`, { action: 'cleaning' }, token).then(() => loadBeds());
                     }}

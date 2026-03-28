@@ -2,6 +2,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { env } from '../lib/env.js';
+import { parseSubRole } from '../lib/rbac.js';
 
 const router = Router();
 
@@ -22,8 +23,16 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ message: 'Incorrect admin credentials.' });
   }
 
-  const token = jwt.sign({ role: 'admin', email }, env.JWT_SECRET, { expiresIn: '12h' });
-  return res.json({ token, profile: { email, role: 'admin' } });
+  const parsedSub = env.ADMIN_SUB_ROLE ? parseSubRole(env.ADMIN_SUB_ROLE) : null;
+  const payload: { role: 'admin'; email: string; sub_role?: typeof parsedSub } = { role: 'admin', email };
+  if (parsedSub) {
+    payload.sub_role = parsedSub;
+  }
+  const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '12h' });
+  return res.json({
+    token,
+    profile: { email, role: 'admin', sub_role: parsedSub ?? null },
+  });
 });
 
 export default router;

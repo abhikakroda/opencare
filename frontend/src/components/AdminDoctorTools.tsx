@@ -3,7 +3,7 @@ import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { Doctor } from '../types';
 
-export const AdminDoctorTools = ({ token }: { token: string }) => {
+export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
 
   const loadDoctors = async () => {
@@ -38,7 +38,11 @@ export const AdminDoctorTools = ({ token }: { token: string }) => {
               </div>
               <select
                 defaultValue={doctor.status}
+                disabled={readOnly}
                 onChange={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api
                     .patch(`/doctors/${doctor.id}`, {
                       status: event.target.value,
@@ -56,7 +60,11 @@ export const AdminDoctorTools = ({ token }: { token: string }) => {
             <div className="grid-form">
               <input
                 defaultValue={doctor.room}
+                disabled={readOnly}
                 onBlur={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api.patch(`/doctors/${doctor.id}`, {
                     status: doctor.status,
                     room: event.target.value,
@@ -66,7 +74,11 @@ export const AdminDoctorTools = ({ token }: { token: string }) => {
               />
               <input
                 defaultValue={doctor.next_slot}
+                disabled={readOnly}
                 onBlur={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api.patch(`/doctors/${doctor.id}`, {
                     status: doctor.status,
                     room: doctor.room,

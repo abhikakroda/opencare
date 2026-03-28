@@ -3,7 +3,7 @@ import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { Medicine } from '../types';
 
-export const AdminPharmacyTools = ({ token }: { token: string }) => {
+export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
 
   const loadMedicines = async () => {
@@ -40,7 +40,11 @@ export const AdminPharmacyTools = ({ token }: { token: string }) => {
                 type="number"
                 min="0"
                 defaultValue={medicine.stock_qty}
+                disabled={readOnly}
                 onBlur={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api
                     .patch(`/medicines/${medicine.id}`, { stock_qty: Number(event.target.value), location: medicine.location }, token)
                     .then(() => loadMedicines());

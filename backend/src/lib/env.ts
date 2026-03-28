@@ -11,6 +11,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(8),
   ADMIN_EMAIL: z.string().email(),
   ADMIN_PASSWORD: z.string().min(8),
+  /** When set to doctor_admin | medical_admin | bed_admin, legacy JWT is scoped; empty = full admin. */
+  ADMIN_SUB_ROLE: z.string().optional().or(z.literal('')),
   GEMINI_API_KEY: z.string().optional(),
 });
 
@@ -20,4 +22,5 @@ export const env = {
   ...parsed,
   SUPABASE_URL: parsed.SUPABASE_URL || undefined,
   SUPABASE_SERVICE_ROLE_KEY: parsed.SUPABASE_SERVICE_ROLE_KEY || undefined,
+  ADMIN_SUB_ROLE: parsed.ADMIN_SUB_ROLE?.trim() || undefined,
 };

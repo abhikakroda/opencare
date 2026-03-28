@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Clock3, Ticket } from 'lucide-react';
 import { departments } from '../config';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import type { QueueItem } from '../types';
@@ -18,6 +19,7 @@ type QueueResponse = {
 };
 
 export const QueuePanel = () => {
+  const { readOnly } = useAuth();
   const [patientName, setPatientName] = useState('');
   const [department, setDepartment] = useState(departments[0]);
   const [queue, setQueue] = useState<QueueResponse>({
@@ -43,6 +45,9 @@ export const QueuePanel = () => {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (readOnly) {
+      return;
+    }
     setLoading(true);
     setMessage('');
 
@@ -94,15 +99,16 @@ export const QueuePanel = () => {
           onChange={(event) => setPatientName(event.target.value)}
           placeholder="Patient full name"
           required
+          disabled={readOnly}
         />
-        <select value={department} onChange={(event) => setDepartment(event.target.value)}>
+        <select value={department} disabled={readOnly} onChange={(event) => setDepartment(event.target.value)}>
           {departments.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
           ))}
         </select>
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={readOnly || loading}>
           {loading ? 'Generating token...' : 'Get Token'}
         </button>
       </form>

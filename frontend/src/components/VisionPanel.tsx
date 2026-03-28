@@ -1,8 +1,10 @@
 import { ScanText } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 
 export const VisionPanel = () => {
+  const { readOnly } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,8 +41,13 @@ export const VisionPanel = () => {
       </div>
 
       <div className="upload-row">
-        <input type="file" accept="image/*" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-        <button type="button" onClick={handleUpload} disabled={!file || loading}>
+        <input
+          type="file"
+          accept="image/*"
+          disabled={readOnly}
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+        <button type="button" onClick={handleUpload} disabled={readOnly || !file || loading}>
           {loading ? 'Analyzing...' : 'Transcribe Photo'}
         </button>
       </div>

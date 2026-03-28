@@ -3,7 +3,7 @@ import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { Machine } from '../types';
 
-export const AdminMachineTools = ({ token }: { token: string }) => {
+export const AdminMachineTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [machines, setMachines] = useState<Machine[]>([]);
 
   const loadMachines = async () => {
@@ -38,7 +38,11 @@ export const AdminMachineTools = ({ token }: { token: string }) => {
               </div>
               <select
                 defaultValue={machine.status}
+                disabled={readOnly}
                 onChange={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api.patch(`/machines/${machine.id}`, {
                     status: event.target.value,
                     quantity: machine.quantity,
@@ -56,7 +60,11 @@ export const AdminMachineTools = ({ token }: { token: string }) => {
                 type="number"
                 min="0"
                 defaultValue={machine.quantity}
+                disabled={readOnly}
                 onBlur={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api.patch(`/machines/${machine.id}`, {
                     status: machine.status,
                     quantity: Number(event.target.value),
@@ -66,7 +74,11 @@ export const AdminMachineTools = ({ token }: { token: string }) => {
               />
               <input
                 defaultValue={machine.location}
+                disabled={readOnly}
                 onBlur={(event) => {
+                  if (readOnly) {
+                    return;
+                  }
                   void api.patch(`/machines/${machine.id}`, {
                     status: machine.status,
                     quantity: machine.quantity,

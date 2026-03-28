@@ -4,7 +4,7 @@ import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import { api } from '../lib/api';
 import type { QueueItem } from '../types';
 
-export const AdminQueueTools = ({ token }: { token: string }) => {
+export const AdminQueueTools = ({ token, readOnly = false }: { token: string; readOnly?: boolean }) => {
   const [department, setDepartment] = useState(departments[0]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
 
@@ -31,7 +31,11 @@ export const AdminQueueTools = ({ token }: { token: string }) => {
       </div>
 
       <div className="grid-form">
-        <select value={department} onChange={(event) => setDepartment(event.target.value)}>
+        <select
+          value={department}
+          disabled={readOnly}
+          onChange={(event) => setDepartment(event.target.value)}
+        >
           {departments.map((item) => (
             <option key={item} value={item}>
               {item}
@@ -40,6 +44,7 @@ export const AdminQueueTools = ({ token }: { token: string }) => {
         </select>
         <button
           type="button"
+          disabled={readOnly}
           onClick={() => {
             void api.post('/queue/call-next', { department }, token).then(() => loadQueue());
           }}
@@ -58,6 +63,7 @@ export const AdminQueueTools = ({ token }: { token: string }) => {
             <div className="action-row">
               <button
                 type="button"
+                disabled={readOnly}
                 onClick={() => {
                   void api.patch(`/queue/${item.id}/status`, { status: 'called' }, token).then(() => loadQueue());
                 }}
@@ -66,6 +72,7 @@ export const AdminQueueTools = ({ token }: { token: string }) => {
               </button>
               <button
                 type="button"
+                disabled={readOnly}
                 onClick={() => {
                   void api.patch(`/queue/${item.id}/status`, { status: 'done' }, token).then(() => loadQueue());
                 }}

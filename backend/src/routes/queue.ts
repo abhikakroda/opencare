@@ -1,12 +1,19 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { requireAdmin } from '../middleware/auth.js';
+import { assertAdminMutationForResource } from '../lib/rbac.js';
 import { requireSupabase } from '../lib/supabase.js';
 import { buildTokenNumber, estimateWaitMinutes } from '../lib/token.js';
+import { requireOperationalUser } from '../middleware/auth.js';
+import type { AuthedRequest } from '../middleware/resolveUser.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+const rbacError = (res: Response, error: unknown) => {
+  const err = error as Error & { status?: number };
+  return res.status(err.status ?? 500).json({ message: err.message });
+};
+
+router.get('/', async (req: AuthedRequest, res) => {
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();
@@ -39,7 +46,13 @@ router.get('/', async (req, res) => {
   });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'queue', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();
@@ -91,7 +104,13 @@ router.post('/', async (req, res) => {
   });
 });
 
-router.post('/call-next', requireAdmin, async (req, res) => {
+router.post('/call-next', requireOperationalUser, async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'queue', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();
@@ -136,7 +155,13 @@ router.post('/call-next', requireAdmin, async (req, res) => {
   return res.json({ item: data });
 });
 
-router.patch('/:id/status', requireAdmin, async (req, res) => {
+router.patch('/:id/status', requireOperationalUser, async (req: AuthedRequest, res) => {
+  try {
+    assertAdminMutationForResource(req.authUser, 'queue', req.method);
+  } catch (error) {
+    return rbacError(res, error);
+  }
+
   let supabaseAdmin;
   try {
     supabaseAdmin = requireSupabase();
