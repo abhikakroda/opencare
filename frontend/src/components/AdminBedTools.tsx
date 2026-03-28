@@ -72,15 +72,27 @@ export const AdminBedTools = ({ token, readOnly = false }: { token: string; read
         </div>
       </div>
 
-      <form className="admin-create-form" onSubmit={(event) => void handleSubmit(event)}>
-        <input value={form.ward} onChange={(event) => setForm((current) => ({ ...current, ward: event.target.value }))} placeholder="Ward name" required disabled={readOnly} />
-        <input value={form.bed_number} onChange={(event) => setForm((current) => ({ ...current, bed_number: event.target.value }))} placeholder="Bed number" required disabled={readOnly} />
-        <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Bed['status'] }))} disabled={readOnly}>
-          <option value="available">Available</option>
-          <option value="occupied">Occupied</option>
-          <option value="cleaning">Cleaning</option>
-        </select>
-        <input value={form.patient_name} onChange={(event) => setForm((current) => ({ ...current, patient_name: event.target.value }))} placeholder="Patient name if occupied" disabled={readOnly} />
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+        <label className="form-field">
+          <span>Ward</span>
+          <input value={form.ward} onChange={(event) => setForm((current) => ({ ...current, ward: event.target.value }))} placeholder="Ward A" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Bed number</span>
+          <input value={form.bed_number} onChange={(event) => setForm((current) => ({ ...current, bed_number: event.target.value }))} placeholder="A-04" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Status</span>
+          <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Bed['status'] }))} disabled={readOnly}>
+            <option value="available">Available</option>
+            <option value="occupied">Occupied</option>
+            <option value="cleaning">Cleaning</option>
+          </select>
+        </label>
+        <label className="form-field form-field-wide">
+          <span>Patient name</span>
+          <input value={form.patient_name} onChange={(event) => setForm((current) => ({ ...current, patient_name: event.target.value }))} placeholder="Only if occupied" disabled={readOnly} />
+        </label>
         <button type="submit" disabled={readOnly}>Add Bed</button>
       </form>
 

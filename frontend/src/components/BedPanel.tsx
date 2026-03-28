@@ -50,10 +50,6 @@ export const BedPanel = () => {
   return (
     <section className="panel">
       <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Bed & Ward Management</p>
-          <h2>Live bed occupancy across all wards</h2>
-        </div>
         <div className="stat-row">
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.available} available</span></div>
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.occupied} occupied</span></div>

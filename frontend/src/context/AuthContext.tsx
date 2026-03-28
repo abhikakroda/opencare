@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => {
     const hasSession = Boolean(apiToken);
-    const readOnly = profile?.role === 'nodal_officer';
+    const readOnly = !hasSession || profile?.role === 'nodal_officer';
     return {
       apiToken,
       profile,

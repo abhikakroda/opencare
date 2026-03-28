@@ -77,17 +77,35 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
         </div>
       </div>
 
-      <form className="admin-create-form" onSubmit={(event) => void handleSubmit(event)}>
-        <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Doctor name" required disabled={readOnly} />
-        <input value={form.department} onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))} placeholder="Department" required disabled={readOnly} />
-        <input value={form.specialization} onChange={(event) => setForm((current) => ({ ...current, specialization: event.target.value }))} placeholder="Specialization" required disabled={readOnly} />
-        <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Doctor['status'] }))} disabled={readOnly}>
-          <option value="available">Available</option>
-          <option value="busy">Busy</option>
-          <option value="off_duty">Off duty</option>
-        </select>
-        <input value={form.room} onChange={(event) => setForm((current) => ({ ...current, room: event.target.value }))} placeholder="Room" required disabled={readOnly} />
-        <input value={form.next_slot} onChange={(event) => setForm((current) => ({ ...current, next_slot: event.target.value }))} placeholder="Next slot" required disabled={readOnly} />
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+        <label className="form-field">
+          <span>Doctor name</span>
+          <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Dr. Meera Joshi" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Department</span>
+          <input value={form.department} onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))} placeholder="Cardiology" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Specialization</span>
+          <input value={form.specialization} onChange={(event) => setForm((current) => ({ ...current, specialization: event.target.value }))} placeholder="Heart Specialist" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Status</span>
+          <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Doctor['status'] }))} disabled={readOnly}>
+            <option value="available">Available</option>
+            <option value="busy">Busy</option>
+            <option value="off_duty">Off duty</option>
+          </select>
+        </label>
+        <label className="form-field">
+          <span>Room</span>
+          <input value={form.room} onChange={(event) => setForm((current) => ({ ...current, room: event.target.value }))} placeholder="Block B / Room 201" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Next slot</span>
+          <input value={form.next_slot} onChange={(event) => setForm((current) => ({ ...current, next_slot: event.target.value }))} placeholder="Available now" required disabled={readOnly} />
+        </label>
         <button type="submit" disabled={readOnly}>Add Doctor</button>
       </form>
 

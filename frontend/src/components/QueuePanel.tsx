@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Clock3, Ticket } from 'lucide-react';
 import { departments } from '../config';
-import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { useRealtimeTable } from '../hooks/useRealtimeTable';
 import type { QueueItem } from '../types';
@@ -19,7 +18,6 @@ type QueueResponse = {
 };
 
 export const QueuePanel = () => {
-  const { readOnly } = useAuth();
   const [patientName, setPatientName] = useState('');
   const [department, setDepartment] = useState(departments[0]);
   const [queue, setQueue] = useState<QueueResponse>({
@@ -53,7 +51,8 @@ export const QueuePanel = () => {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (readOnly) {
+    if (!patientName.trim()) {
+      setMessage('Patient name is required.');
       return;
     }
     setLoading(true);
@@ -85,10 +84,6 @@ export const QueuePanel = () => {
   return (
     <section className="panel">
       <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Smart Queue</p>
-          <h2>Book OPD token and track live queue status</h2>
-        </div>
         <div className="stat-row">
           <div className="mini-stat">
             <Clock3 size={18} />
@@ -107,16 +102,15 @@ export const QueuePanel = () => {
           onChange={(event) => setPatientName(event.target.value)}
           placeholder="Patient full name"
           required
-          disabled={readOnly}
         />
-        <select value={department} disabled={readOnly} onChange={(event) => setDepartment(event.target.value)}>
+        <select value={department} onChange={(event) => setDepartment(event.target.value)}>
           {departments.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
           ))}
         </select>
-        <button type="submit" disabled={readOnly || loading}>
+        <button type="submit" disabled={loading}>
           {loading ? 'Generating token...' : 'Get Token'}
         </button>
       </form>

@@ -38,12 +38,7 @@ export const DoctorPanel = () => {
 
   return (
     <section className="panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Doctor Availability</p>
-          <h2>Check which doctors are available right now</h2>
-        </div>
-      </div>
+
 
       <label className="search-box">
         <Search size={18} />

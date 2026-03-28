@@ -77,17 +77,35 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
         </div>
       </div>
 
-      <form className="admin-create-form" onSubmit={(event) => void handleSubmit(event)}>
-        <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Machine name" required disabled={readOnly} />
-        <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Category" required disabled={readOnly} />
-        <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Location" required disabled={readOnly} />
-        <input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} placeholder="Quantity" required disabled={readOnly} />
-        <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Machine['status'] }))} disabled={readOnly}>
-          <option value="available">Available</option>
-          <option value="in_use">In use</option>
-          <option value="maintenance">Maintenance</option>
-        </select>
-        <input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Notes" disabled={readOnly} />
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+        <label className="form-field">
+          <span>Machine name</span>
+          <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="MRI Scanner" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Category</span>
+          <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Imaging" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Location</span>
+          <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Radiology Floor 1" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Quantity</span>
+          <input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} placeholder="1" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Status</span>
+          <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Machine['status'] }))} disabled={readOnly}>
+            <option value="available">Available</option>
+            <option value="in_use">In use</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+        </label>
+        <label className="form-field form-field-wide">
+          <span>Notes</span>
+          <input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Slot booking required" disabled={readOnly} />
+        </label>
         <button type="submit" disabled={readOnly}>Add Machine</button>
       </form>
 

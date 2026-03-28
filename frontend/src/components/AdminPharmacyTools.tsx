@@ -81,13 +81,31 @@ export const AdminPharmacyTools = ({ token, readOnly = false }: { token: string;
         </div>
       </div>
 
-      <form className="admin-create-form" onSubmit={(event) => void handleSubmit(event)}>
-        <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Medicine name" required disabled={readOnly} />
-        <input value={form.generic_name} onChange={(event) => setForm((current) => ({ ...current, generic_name: event.target.value }))} placeholder="Generic name" required disabled={readOnly} />
-        <input value={form.brand_names} onChange={(event) => setForm((current) => ({ ...current, brand_names: event.target.value }))} placeholder="Brand names comma separated" disabled={readOnly} />
-        <input type="number" min="0" value={form.stock_qty} onChange={(event) => setForm((current) => ({ ...current, stock_qty: event.target.value }))} placeholder="Stock qty" required disabled={readOnly} />
-        <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Location" required disabled={readOnly} />
-        <input value={form.alternatives} onChange={(event) => setForm((current) => ({ ...current, alternatives: event.target.value }))} placeholder="Alternatives comma separated" disabled={readOnly} />
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+        <label className="form-field">
+          <span>Medicine name</span>
+          <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Paracetamol 650" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Generic name</span>
+          <input value={form.generic_name} onChange={(event) => setForm((current) => ({ ...current, generic_name: event.target.value }))} placeholder="Paracetamol" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Brand names</span>
+          <input value={form.brand_names} onChange={(event) => setForm((current) => ({ ...current, brand_names: event.target.value }))} placeholder="Dolo 650, Crocin" disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Stock quantity</span>
+          <input type="number" min="0" value={form.stock_qty} onChange={(event) => setForm((current) => ({ ...current, stock_qty: event.target.value }))} placeholder="120" required disabled={readOnly} />
+        </label>
+        <label className="form-field">
+          <span>Location</span>
+          <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Pharmacy A / Rack 3" required disabled={readOnly} />
+        </label>
+        <label className="form-field form-field-wide">
+          <span>Alternatives</span>
+          <input value={form.alternatives} onChange={(event) => setForm((current) => ({ ...current, alternatives: event.target.value }))} placeholder="Acetaminophen 500" disabled={readOnly} />
+        </label>
         <button type="submit" disabled={readOnly}>Add Medicine</button>
       </form>
 

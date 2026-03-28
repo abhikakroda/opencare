@@ -38,12 +38,7 @@ export const MachinePanel = () => {
 
   return (
     <section className="panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Machine Availability</p>
-          <h2>See whether hospital machines and equipment are available</h2>
-        </div>
-      </div>
+
 
       <label className="search-box">
         <Search size={18} />

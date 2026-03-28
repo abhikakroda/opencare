@@ -1,6 +1,7 @@
 import { apiUrl } from '../config';
 
 export const ADMIN_TOKEN_STORAGE_KEY = 'opencare-admin-token';
+export const ADMIN_PROFILE_STORAGE_KEY = 'opencare-admin-profile';
 export const ADMIN_AUTH_EXPIRED_EVENT = 'opencare-admin-auth-expired';
 
 const readErrorMessage = async (response: Response) => {
@@ -28,6 +29,7 @@ const buildHeaders = (token?: string, json = true) => {
 
 const handleUnauthorized = () => {
   window.localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+  window.localStorage.removeItem(ADMIN_PROFILE_STORAGE_KEY);
   window.dispatchEvent(new CustomEvent(ADMIN_AUTH_EXPIRED_EVENT));
 };
 

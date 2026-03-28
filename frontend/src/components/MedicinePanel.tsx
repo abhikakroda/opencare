@@ -39,12 +39,7 @@ export const MedicinePanel = () => {
 
   return (
     <section className="panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Medicine Availability</p>
-          <h2>Search generic or brand medicines in the hospital store</h2>
-        </div>
-      </div>
+
 
       <label className="search-box">
         <Search size={18} />
@@ -74,8 +69,6 @@ export const MedicinePanel = () => {
               </div>
               <StatusBadge tone={getStockTone(medicine.stock_qty)} />
             </div>
-            <p>Qty: {medicine.stock_qty}</p>
-            <p>Location: {medicine.location}</p>
             <p>Brands: {medicine.brand_names.join(', ') || 'N/A'}</p>
             {medicine.stock_qty <= 0 && medicine.alternatives.length > 0 ? (
               <p>Alternatives: {medicine.alternatives.join(', ')}</p>

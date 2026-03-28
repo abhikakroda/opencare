@@ -1,25 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Router, type Response } from 'express';
+import { Router } from 'express';
 import multer from 'multer';
-import { assertAdminMutationForResource } from '../lib/rbac.js';
 import { env } from '../lib/env.js';
 import type { AuthedRequest } from '../middleware/resolveUser.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-const rbacError = (res: Response, error: unknown) => {
-  const err = error as Error & { status?: number };
-  return res.status(err.status ?? 500).json({ message: err.message });
-};
-
 router.post('/transcribe', upload.single('image'), async (req: AuthedRequest, res) => {
-  try {
-    assertAdminMutationForResource(req.authUser, 'vision', req.method);
-  } catch (error) {
-    return rbacError(res, error);
-  }
-
   if (!env.GEMINI_API_KEY) {
     return res.status(400).json({ message: 'Gemini API key is not configured.' });
   }

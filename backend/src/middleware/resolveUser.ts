@@ -47,13 +47,14 @@ async function resolveFromSupabaseToken(token: string): Promise<AuthUser | null>
 function resolveFromLegacyJwt(token: string): AuthUser | null {
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as LegacyJwtPayload;
-    if (payload.role !== 'admin') {
+    const role = parseAppRole(payload.role);
+    if (!role) {
       return null;
     }
 
     return {
-      role: 'admin',
-      sub_role: parseSubRole(payload.sub_role ?? null),
+      role,
+      sub_role: role === 'admin' ? parseSubRole(payload.sub_role ?? null) : null,
       email: payload.email ?? null,
       source: 'legacy',
     };

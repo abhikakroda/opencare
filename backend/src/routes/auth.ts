@@ -2,21 +2,26 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { env } from '../lib/env.js';
+import type { AppRole } from '../lib/rbac.js';
 import { requireSupabase, supabaseAdmin } from '../lib/supabase.js';
 
 const router = Router();
 
-const DEMO_ADMIN_EMAIL = 'admin@opencare.com';
-const DEMO_ADMIN_PASSWORD = '123456';
+const DEMO_USERS = [
+  { email: 'admin@opencare.com', password: '123456', role: 'admin', full_name: 'Hospital Admin' },
+  { email: 'staff@opencare.com', password: '123456', role: 'staff', full_name: 'Hospital Staff' },
+  { email: 'nodal@opencare.com', password: '123456', role: 'nodal_officer', full_name: 'Nodal Officer' },
+] as const;
 
 type AdminUser = {
   email: string;
   password: string;
-  role: 'admin' | 'staff';
+  role: AppRole;
   is_active: boolean;
 };
 
-const signAdminToken = (email: string) => jwt.sign({ role: 'admin', email }, env.JWT_SECRET, { expiresIn: '12h' });
+const signAdminToken = (email: string, role: AppRole) =>
+  jwt.sign({ role, email }, env.JWT_SECRET, { expiresIn: '12h' });
 
 const loadAdminUser = async (email: string): Promise<AdminUser | null> => {
   if (!supabaseAdmin) {
@@ -46,6 +51,7 @@ router.post('/login', async (req, res) => {
     .object({
       email: z.string().email(),
       password: z.string().min(1),
+      access_role: z.enum(['admin', 'staff', 'nodal_officer']).optional(),
     })
     .safeParse(req.body);
 
@@ -53,7 +59,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Invalid login payload.' });
   }
 
-  const { email, password } = parsed.data;
+  const { email, password, access_role } = parsed.data;
   const user = await loadAdminUser(email);
 
   if (user) {
@@ -65,19 +71,35 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Incorrect admin credentials.' });
     }
 
-    const token = signAdminToken(email);
+    if (access_role && user.role !== access_role) {
+      return res.status(403).json({ message: 'Selected access role does not match this account.' });
+    }
+
+    const token = signAdminToken(email, user.role);
     return res.json({ token, profile: { email, role: user.role, sub_role: null } });
   }
 
-  const matchesEnvAdmin = email === env.ADMIN_EMAIL && password === env.ADMIN_PASSWORD;
-  const matchesDemoAdmin = email === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_PASSWORD;
+  const envAdminMatches = email === env.ADMIN_EMAIL && password === env.ADMIN_PASSWORD;
+  if (envAdminMatches) {
+    if (access_role && access_role !== 'admin') {
+      return res.status(403).json({ message: 'Selected access role does not match this account.' });
+    }
 
-  if (!matchesEnvAdmin && !matchesDemoAdmin) {
+    const token = signAdminToken(email, 'admin');
+    return res.json({ token, profile: { email, role: 'admin', sub_role: null } });
+  }
+
+  const demoUser = DEMO_USERS.find((item) => item.email === email && item.password === password);
+  if (!demoUser) {
     return res.status(401).json({ message: 'Incorrect admin credentials.' });
   }
 
-  const token = signAdminToken(email);
-  return res.json({ token, profile: { email, role: 'admin', sub_role: null } });
+  if (access_role && access_role !== demoUser.role) {
+    return res.status(403).json({ message: 'Selected access role does not match this account.' });
+  }
+
+  const token = signAdminToken(email, demoUser.role);
+  return res.json({ token, profile: { email, role: demoUser.role, sub_role: null } });
 });
 
 export default router;
