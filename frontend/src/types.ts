@@ -2,6 +2,7 @@ export type QueueStatus = 'waiting' | 'called' | 'done';
 export type BedStatus = 'available' | 'occupied' | 'cleaning';
 export type DoctorStatus = 'available' | 'busy' | 'off_duty';
 export type MachineStatus = 'available' | 'in_use' | 'maintenance';
+export type ComplaintStatus = 'open' | 'in_review' | 'resolved';
 
 export type QueueItem = {
   id: string;
@@ -53,5 +54,33 @@ export type Machine = {
   quantity: number;
   status: MachineStatus;
   notes: string;
+  updated_at: string;
+};
+
+export type Complaint = {
+  id: string;
+  patient_name: string;
+  phone: string | null;
+  department: string;
+  subject: string;
+  message: string;
+  status: ComplaintStatus;
+  admin_note: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MedicalHistory = {
+  id: string;
+  patient_name: string;
+  phone: string;
+  visit_date: string;
+  department: string;
+  diagnosis: string;
+  medicines: string[];
+  allergies: string[];
+  notes: string;
+  recorded_by: string;
+  created_at: string;
   updated_at: string;
 };

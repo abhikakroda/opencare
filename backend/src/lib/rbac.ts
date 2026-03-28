@@ -38,7 +38,7 @@ function forbidden(message: string): Error {
  */
 export function assertAdminMutationForResource(
   user: AuthUser | null | undefined,
-  resource: 'queue' | 'medicines' | 'beds' | 'vision' | 'doctors' | 'machines',
+  resource: 'queue' | 'medicines' | 'beds' | 'vision' | 'doctors' | 'machines' | 'complaints' | 'medical_history',
   method: string,
 ): void {
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
@@ -69,7 +69,7 @@ export function assertAdminMutationForResource(
     const sub = user.sub_role;
     const can =
       (sub === 'doctor_admin' && (resource === 'queue' || resource === 'doctors' || resource === 'machines')) ||
-      (sub === 'medical_admin' && resource === 'medicines') ||
+      (sub === 'medical_admin' && (resource === 'medicines' || resource === 'medical_history')) ||
       (sub === 'bed_admin' && resource === 'beds');
 
     if (!can) {

@@ -15,6 +15,9 @@ export const MachinePanel = () => {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const availableCount = machines.filter((machine) => machine.status === 'available').length;
+  const maintenanceCount = machines.filter((machine) => machine.status === 'maintenance').length;
+  const inUseCount = machines.filter((machine) => machine.status === 'in_use').length;
 
   const loadMachines = async () => {
     try {
@@ -38,7 +41,20 @@ export const MachinePanel = () => {
 
   return (
     <section className="panel">
-
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Machine Inventory</p>
+          <h2>See which equipment is available right now</h2>
+          <p className="hero-text">
+            Search by machine name, category, or location to check live status across the hospital.
+          </p>
+        </div>
+        <div className="stat-row">
+          <div className="mini-stat"><span>{availableCount} available</span></div>
+          <div className="mini-stat"><span>{inUseCount} in use</span></div>
+          <div className="mini-stat"><span>{maintenanceCount} maintenance</span></div>
+        </div>
+      </div>
 
       <label className="search-box">
         <Search size={18} />
@@ -71,9 +87,13 @@ export const MachinePanel = () => {
                 {machine.status.replace('_', ' ')}
               </span>
             </div>
-            <p>Location: {machine.location}</p>
-            <p>Quantity: {machine.quantity}</p>
-            <p>{machine.notes}</p>
+            <div style={{ display: 'grid', gap: '0.45rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                <span className="badge badge-called">Location: {machine.location}</span>
+                <span className="badge badge-stock-ok">Qty: {machine.quantity}</span>
+              </div>
+              <p style={{ margin: 0 }}>{machine.notes}</p>
+            </div>
           </article>
         ))}
       </div>

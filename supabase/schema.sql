@@ -53,6 +53,34 @@ create table if not exists public.machines (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.complaints (
+  id uuid primary key default gen_random_uuid(),
+  patient_name text not null,
+  phone text,
+  department text not null,
+  subject text not null,
+  message text not null,
+  status text not null check (status in ('open', 'in_review', 'resolved')) default 'open',
+  admin_note text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.medical_histories (
+  id uuid primary key default gen_random_uuid(),
+  patient_name text not null,
+  phone text not null,
+  visit_date date not null,
+  department text not null,
+  diagnosis text not null,
+  medicines text[] not null default '{}',
+  allergies text[] not null default '{}',
+  notes text not null default '',
+  recorded_by text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.admin_users (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
@@ -69,3 +97,5 @@ alter publication supabase_realtime add table public.medicines;
 alter publication supabase_realtime add table public.beds;
 alter publication supabase_realtime add table public.doctors;
 alter publication supabase_realtime add table public.machines;
+alter publication supabase_realtime add table public.complaints;
+alter publication supabase_realtime add table public.medical_histories;

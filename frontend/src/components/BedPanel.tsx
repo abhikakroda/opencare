@@ -46,15 +46,39 @@ export const BedPanel = () => {
     acc[bed.ward].push(bed);
     return acc;
   }, {});
+  const totalBeds = bedData.items.length;
+  const occupancyRate = totalBeds ? Math.round((bedData.summary.occupied / totalBeds) * 100) : 0;
 
   return (
     <section className="panel">
       <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Bed & Ward Status</p>
+          <h2>Live ward occupancy across the hospital</h2>
+          <p className="hero-text">
+            Check available, occupied, and cleaning beds grouped by ward for faster admission planning.
+          </p>
+        </div>
         <div className="stat-row">
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.available} available</span></div>
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.occupied} occupied</span></div>
           <div className="mini-stat"><BedDouble size={18} /><span>{bedData.summary.cleaning} cleaning</span></div>
         </div>
+      </div>
+
+      <div className="feature-grid" style={{ marginBottom: '1rem' }}>
+        <article className="info-card">
+          <strong>Total beds</strong>
+          <p>{totalBeds}</p>
+        </article>
+        <article className="info-card">
+          <strong>Occupancy rate</strong>
+          <p>{occupancyRate}%</p>
+        </article>
+        <article className="info-card">
+          <strong>Free capacity</strong>
+          <p>{bedData.summary.available}</p>
+        </article>
       </div>
 
       {error ? <p className="error-text">{error}</p> : null}
@@ -68,12 +92,18 @@ export const BedPanel = () => {
 
       {Object.entries(grouped).map(([ward, beds]) => (
         <div key={ward} className="ward-section">
-          <h3>{ward}</h3>
+          <div className="card-head">
+            <div>
+              <strong>{ward}</strong>
+              <p>{beds.length} beds</p>
+            </div>
+            <span className="badge badge-called">{beds.filter((bed) => bed.status === 'available').length} open</span>
+          </div>
           <div className="bed-grid">
             {beds.map((bed) => (
               <article key={bed.id} className={`bed-card bed-${bed.status}`}>
                 <strong>{bed.bed_number}</strong>
-                <span>{bed.status}</span>
+                <span>{bed.status.replace('_', ' ')}</span>
                 <small>{bed.patient_name ?? 'Vacant'}</small>
               </article>
             ))}

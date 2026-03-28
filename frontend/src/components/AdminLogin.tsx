@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -15,37 +15,22 @@ export type AdminSession = {
 };
 
 type AdminLoginProps = {
-  role: AdminAccessRole;
   onLogin: (session: AdminSession) => void;
   notice?: string;
 };
 
-const DEMO_CREDENTIALS: Record<AdminAccessRole, { email: string; password: string; label: string }> = {
-  admin: { email: 'admin@opencare.com', password: '123456', label: 'Hospital Admin' },
-  staff: { email: 'staff@opencare.com', password: '123456', label: 'Staff' },
-  nodal_officer: { email: 'nodal@opencare.com', password: '123456', label: 'Nodal Officer' },
-};
-
-export const AdminLogin = ({ role, onLogin, notice }: AdminLoginProps) => {
+export const AdminLogin = ({ onLogin, notice }: AdminLoginProps) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState(DEMO_CREDENTIALS[role].email);
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  const preset = DEMO_CREDENTIALS[role];
-
-  useEffect(() => {
-    setEmail(preset.email);
-    setPassword(preset.password);
-    setError('');
-  }, [preset.email, preset.password]);
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
 
     try {
-      const response = await api.post<AdminSession>('/auth/login', { email, password, access_role: role });
+      const response = await api.post<AdminSession>('/auth/login', { email, password });
       onLogin(response);
       navigate('/admin');
     } catch (loginError) {
@@ -55,16 +40,42 @@ export const AdminLogin = ({ role, onLogin, notice }: AdminLoginProps) => {
 
   return (
     <section className="panel admin-login">
-      <p className="eyebrow">Admin Access</p>
-      <h2>{preset.label} login</h2>
-      <p className="hero-text">Demo login: `{preset.email}` / `{preset.password}`</p>
-      {notice ? <p className="error-text">{notice}</p> : null}
-      <form className="grid-form" onSubmit={handleLogin}>
-        <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Admin email" />
-        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Password" />
-        <button type="submit">Open {preset.label} Access</button>
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Admin Access</p>
+          <h2>Hospital admin, staff, and nodal officer sign in</h2>
+          <p className="helper-text">Use your assigned email and password to open the dedicated admin workspace.</p>
+        </div>
+      </div>
+
+      {notice ? (
+        <div className="empty-state">
+          <strong>Session notice</strong>
+          <p>{notice}</p>
+        </div>
+      ) : null}
+
+      <form className="admin-create-form admin-form-grid" onSubmit={handleLogin}>
+        <label className="form-field">
+          <span>Email address</span>
+          <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="admin@opencare.com" required />
+        </label>
+        <label className="form-field">
+          <span>Password</span>
+          <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Enter password" required />
+        </label>
+        <div className="action-row">
+          <button type="submit">Open admin workspace</button>
+          <span className="helper-text">Protected access for hospital operations.</span>
+        </div>
       </form>
-      {error ? <p className="error-text">{error}</p> : null}
+
+      {error ? (
+        <div className="empty-state">
+          <strong>Login failed</strong>
+          <p>{error}</p>
+        </div>
+      ) : null}
     </section>
   );
 };

@@ -15,6 +15,9 @@ export const DoctorPanel = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const availableCount = doctors.filter((doctor) => doctor.status === 'available').length;
+  const busyCount = doctors.filter((doctor) => doctor.status === 'busy').length;
+  const offDutyCount = doctors.filter((doctor) => doctor.status === 'off_duty').length;
 
   const loadDoctors = async () => {
     try {
@@ -38,7 +41,20 @@ export const DoctorPanel = () => {
 
   return (
     <section className="panel">
-
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Doctor Directory</p>
+          <h2>Find available doctors and their next slot</h2>
+          <p className="hero-text">
+            Search by name, department, or specialization to see live availability across the hospital.
+          </p>
+        </div>
+        <div className="stat-row">
+          <div className="mini-stat"><span>{availableCount} available</span></div>
+          <div className="mini-stat"><span>{busyCount} busy</span></div>
+          <div className="mini-stat"><span>{offDutyCount} off duty</span></div>
+        </div>
+      </div>
 
       <label className="search-box">
         <Search size={18} />
@@ -71,9 +87,13 @@ export const DoctorPanel = () => {
                 {doctor.status.replace('_', ' ')}
               </span>
             </div>
-            <p>Department: {doctor.department}</p>
-            <p>Room: {doctor.room}</p>
-            <p>Next slot: {doctor.next_slot}</p>
+            <div style={{ display: 'grid', gap: '0.45rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                <span className="badge badge-called">Department: {doctor.department}</span>
+                <span className="badge badge-stock-ok">Room: {doctor.room}</span>
+              </div>
+              <p style={{ margin: 0 }}>Next slot: {doctor.next_slot}</p>
+            </div>
           </article>
         ))}
       </div>

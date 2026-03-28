@@ -3,9 +3,11 @@ import express from 'express';
 import authRoutes from './routes/auth.js';
 import bedRoutes from './routes/beds.js';
 import chatRoutes from './routes/chat.js';
+import complaintRoutes from './routes/complaints.js';
 import doctorRoutes from './routes/doctors.js';
 import medicineRoutes from './routes/medicines.js';
 import machineRoutes from './routes/machines.js';
+import medicalHistoryRoutes from './routes/medicalHistory.js';
 import queueRoutes from './routes/queue.js';
 import visionRoutes from './routes/vision.js';
 import { env } from './lib/env.js';
@@ -43,11 +45,13 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/complaints', complaintRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/beds', bedRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/machines', machineRoutes);
+app.use('/api/medical-history', medicalHistoryRoutes);
 app.use('/api/vision', visionRoutes);
 
 app.listen(env.PORT, () => {

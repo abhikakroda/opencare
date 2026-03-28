@@ -51,6 +51,7 @@ body {
   min-height: 100vh;
   background: transparent;
   color: var(--ink);
+  overflow-x: hidden;
 }
 
 a {
@@ -60,7 +61,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -94,13 +96,19 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 0.85rem 1rem;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 140px;
 }
 
 #root {
@@ -243,7 +251,35 @@ select {
 .page-shell {
   display: grid;
   gap: 1.25rem;
-  padding: 1.25rem 0 2rem;
+  padding: 0 0 2rem;
+  min-width: 0;
+}
+
+.centered-shell {
+  min-height: min(78vh, 820px);
+  place-items: center;
+  align-content: center;
+}
+
+.centered-hero {
+  width: min(100%, 560px);
+  margin: 0 auto;
+}
+
+.centered-copy {
+  align-items: center;
+  text-align: center;
+}
+
+.centered-cta {
+  justify-content: center;
+  margin-top: 0.85rem;
+}
+
+.centered-panel {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  text-align: center;
 }
 
 .feature-grid {
@@ -374,7 +410,10 @@ select {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 1.25rem;
-  padding: 1.25rem;
+  padding: 1.1rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .sidebar {
@@ -389,6 +428,8 @@ select {
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
 }
 
 :root[data-theme='dark'] .sidebar,
@@ -447,7 +488,8 @@ select {
 }
 
 :root[data-theme='dark'] input,
-:root[data-theme='dark'] select {
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea {
   background: rgba(12, 20, 27, 0.96);
   color: var(--ink);
 }
@@ -606,18 +648,19 @@ select {
 
 .main-shell {
   display: grid;
-  gap: 0;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .content-shell {
   display: grid;
   gap: 1rem;
-  padding-top: 1rem;
+  min-width: 0;
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .refined-topbar {
@@ -628,10 +671,12 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.5rem 0.85rem;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
   background: rgba(245, 246, 252, 0.85);
   min-height: 40px;
+  flex: 1 1 320px;
+  max-width: 420px;
   flex-shrink: 1;
   min-width: 0;
   overflow: hidden;
@@ -760,8 +805,68 @@ select {
 }
 
 .page-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.75rem;
   align-content: start;
+}
+
+.admin-page-shell {
+  gap: 0.9rem;
+}
+
+.admin-page-hero {
+  padding: 1.15rem 1.2rem;
+}
+
+.admin-page-intro {
+  max-width: 760px;
+}
+
+.admin-page-insights {
+  grid-template-columns: repeat(auto-fit, minmax(188px, 1fr));
+}
+
+.admin-insight-card,
+.admin-session-card {
+  min-height: 138px;
+}
+
+.admin-session-card button {
+  margin-top: 0.35rem;
+  width: fit-content;
+  padding-inline: 0.95rem;
+}
+
+.admin-subnav {
+  margin-top: -0.05rem;
+}
+
+.admin-subnav a {
+  min-height: 44px;
+  padding-inline: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.admin-page-shell .page-insight-card,
+.admin-page-shell .chart-card,
+.admin-page-shell .metric-tile,
+.admin-page-shell .role-card {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 160ms ease;
+}
+
+.admin-page-shell .page-insight-card:hover,
+.admin-page-shell .chart-card:hover,
+.admin-page-shell .metric-tile:hover,
+.admin-page-shell .role-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(61, 91, 224, 0.2);
+  box-shadow: 0 18px 36px rgba(41, 55, 95, 0.1);
 }
 
 .page-insight-card {
@@ -889,8 +994,8 @@ select {
 
 .admin-overview-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 0.95rem;
 }
 
 .hero-chart-card {
@@ -900,6 +1005,8 @@ select {
 .chart-card {
   display: grid;
   gap: 1rem;
+  min-height: 100%;
+  padding: 1rem;
 }
 
 .chart-card-head {
@@ -915,7 +1022,7 @@ select {
 
 .daily-insight-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.85rem;
 }
 
@@ -987,6 +1094,18 @@ select {
   background: linear-gradient(90deg, #9eaac7, #7e8bad);
 }
 
+.legend-dot.bed-cleaning {
+  background: #ebb76a;
+}
+
+.legend-dot.bed-available {
+  background: #55a9d1;
+}
+
+.legend-dot.bed-occupied {
+  background: #7e8bad;
+}
+
 .mini-column-chart {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -1019,10 +1138,80 @@ select {
   background: linear-gradient(180deg, #556fe7, #7f96ff);
 }
 
+.donut-card-body {
+  display: grid;
+  grid-template-columns: minmax(150px, 170px) 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.donut-visual-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.donut-chart {
+  width: 168px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(128, 144, 185, 0.12);
+}
+
+.donut-hole {
+  width: 64%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  gap: 0.1rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border);
+}
+
+.donut-hole span,
+.donut-legend-copy span:last-child {
+  color: var(--muted);
+}
+
+.donut-hole strong {
+  color: var(--ink);
+  font-size: 1.5rem;
+}
+
+.donut-legend {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.donut-legend-row,
+.donut-legend-copy {
+  display: flex;
+  align-items: center;
+}
+
+.donut-legend-row {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.donut-legend-copy {
+  gap: 0.6rem;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
 .metric-strip {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.9rem;
 }
 
@@ -1187,6 +1376,7 @@ select {
 
   .sidebar {
     position: static;
+    max-height: none;
   }
 
   .clinical-hero,
@@ -1213,7 +1403,7 @@ select {
   }
 
   .topbar {
-    height: 52px;
+    height: 54px;
     padding: 0 0.75rem;
     border-radius: 18px;
   }
@@ -1709,6 +1899,85 @@ button:focus-visible {
   margin-bottom: 0.1rem;
 }
 
+.history-auth-card,
+.history-card,
+.history-status-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.history-result-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.history-status-card {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.history-card p,
+.history-card small,
+.history-status-card p,
+.history-status-card strong {
+  margin: 0;
+}
+
+.complaint-form-grid,
+.complaint-meta-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.complaint-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.complaint-card p,
+.complaint-card small {
+  margin: 0;
+}
+
+.track-issue-panel {
+  margin-top: 1rem;
+}
+
+.tracked-complaint-card {
+  margin-top: 0.9rem;
+}
+
+.complaint-meta-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.complaint-badge {
+  text-transform: capitalize;
+}
+
+.complaint-open {
+  background: rgba(208, 79, 79, 0.14);
+  color: #b13f3f;
+}
+
+.complaint-in_review {
+  background: rgba(212, 148, 36, 0.15);
+  color: #915d00;
+}
+
+.complaint-resolved {
+  background: rgba(61, 91, 224, 0.12);
+  color: var(--primary-deep);
+}
+
 .error-text {
   color: var(--danger);
   margin-top: 0.75rem;
@@ -1784,5 +2053,15 @@ button:focus-visible {
   .hero h1 {
     max-width: none;
     font-size: clamp(1.85rem, 9vw, 2.55rem);
+  }
+
+  .centered-shell {
+    min-height: auto;
+    place-items: stretch;
+  }
+
+  .centered-hero,
+  .centered-panel {
+    width: 100%;
   }
 }

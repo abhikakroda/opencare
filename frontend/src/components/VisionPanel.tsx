@@ -60,6 +60,8 @@ export const VisionPanel = () => {
   }, [file]);
 
   const parsedResult = useMemo(() => parseVisionResult(result), [result]);
+  const medicinesFound = parsedResult?.medicines?.length ?? 0;
+  const warningsFound = parsedResult?.warnings?.length ?? 0;
 
   const resetSelection = () => {
     setFile(null);
@@ -115,11 +117,34 @@ export const VisionPanel = () => {
 
       <div className="vision-layout">
         <div className="vision-column">
-          <div className="upload-row">
+          <div className="token-card" style={{ margin: 0 }}>
+            <span className="token-label">Prescription scan</span>
+            <strong>{file ? 'Image ready for transcription' : 'Upload a clear prescription photo'}</strong>
+            <p style={{ margin: 0, color: 'var(--muted)' }}>
+              Use a well-lit image with the full note visible. The scan stays private and is only used for Gemini extraction.
+            </p>
+            <div className="action-row" style={{ marginTop: '0.2rem' }}>
+              <button type="button" className="secondary-button" onClick={() => inputRef.current?.click()}>
+                <FileImage size={16} />
+                {file ? 'Replace image' : 'Choose image'}
+              </button>
+              <button type="button" onClick={handleUpload} disabled={!file || loading}>
+                {loading ? 'Analyzing...' : 'Transcribe Photo'}
+              </button>
+              <button type="button" className="secondary-button" onClick={resetSelection} disabled={loading && !file}>
+                <RotateCcw size={16} />
+                Clear
+              </button>
+              <button type="button" className="secondary-button" onClick={() => void copyResult()} disabled={!result}>
+                <ClipboardList size={16} />
+                {copied ? 'Copied' : 'Copy Result'}
+              </button>
+            </div>
             <input
               ref={inputRef}
               type="file"
               accept="image/*"
+              style={{ display: 'none' }}
               onChange={(event) => {
                 const nextFile = event.target.files?.[0] ?? null;
                 setFile(nextFile);
@@ -128,20 +153,6 @@ export const VisionPanel = () => {
                 setCopied(false);
               }}
             />
-          </div>
-
-          <div className="action-row">
-            <button type="button" onClick={handleUpload} disabled={!file || loading}>
-              {loading ? 'Analyzing...' : 'Transcribe Photo'}
-            </button>
-            <button type="button" className="secondary-button" onClick={resetSelection} disabled={loading && !file}>
-              <RotateCcw size={16} />
-              Clear
-            </button>
-            <button type="button" className="secondary-button" onClick={() => void copyResult()} disabled={!result}>
-              <ClipboardList size={16} />
-              {copied ? 'Copied' : 'Copy Result'}
-            </button>
           </div>
 
           <div className="vision-meta-grid">
@@ -195,7 +206,21 @@ export const VisionPanel = () => {
           {error ? <p className="error-text">{error}</p> : null}
 
           {parsedResult ? (
-            <div className="vision-result-grid">
+            <div style={{ display: 'grid', gap: '0.9rem' }}>
+              <article className="token-card" style={{ margin: 0 }}>
+                <span className="token-label">Scan complete</span>
+                <strong>Prescription summary ready</strong>
+                <p style={{ margin: 0, color: 'var(--muted)' }}>
+                  Review the extracted transcription, detected medicines, and any warnings below.
+                </p>
+                <div className="action-row" style={{ marginTop: '0.35rem' }}>
+                  <span className="badge">Transcription {parsedResult.transcription ? 'ready' : 'missing'}</span>
+                  <span className="badge">Medicines {medicinesFound}</span>
+                  <span className="badge">Warnings {warningsFound}</span>
+                </div>
+              </article>
+
+              <div className="vision-result-grid">
               <article className="vision-result-card">
                 <div className="card-head">
                   <div>
@@ -257,6 +282,7 @@ export const VisionPanel = () => {
                   <p>No warnings returned.</p>
                 )}
               </article>
+            </div>
             </div>
           ) : result ? (
             <pre className="result-box">{result}</pre>

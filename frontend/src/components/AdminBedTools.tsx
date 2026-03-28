@@ -38,6 +38,9 @@ export const AdminBedTools = ({ token, readOnly = false }: { token: string; read
   });
 
   const wards = useMemo(() => Array.from(new Set(beds.map((bed) => bed.ward))), [beds]);
+  const availableCount = beds.filter((bed) => bed.status === 'available').length;
+  const occupiedCount = beds.filter((bed) => bed.status === 'occupied').length;
+  const cleaningCount = beds.filter((bed) => bed.status === 'cleaning').length;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -69,6 +72,17 @@ export const AdminBedTools = ({ token, readOnly = false }: { token: string; read
         <div>
           <p className="eyebrow">Bed Actions</p>
           <h2>Handle admissions and turnover on a clean ward management page</h2>
+          <p className="helper-text">Add a bed above, then use each ward card to admit, discharge, or mark a bed for cleaning.</p>
+        </div>
+      </div>
+
+      <div className="token-card" style={{ marginBottom: '1rem' }}>
+        <span className="token-label">Live ward snapshot</span>
+        <strong>{beds.length} beds across {wards.length || 0} wards</strong>
+        <div className="action-row" style={{ marginTop: '0.25rem' }}>
+          <span className="badge">Available {availableCount}</span>
+          <span className="badge">Occupied {occupiedCount}</span>
+          <span className="badge">Cleaning {cleaningCount}</span>
         </div>
       </div>
 
@@ -96,89 +110,119 @@ export const AdminBedTools = ({ token, readOnly = false }: { token: string; read
         <button type="submit" disabled={readOnly}>Add Bed</button>
       </form>
 
-      {message ? <p className="success-text">{message}</p> : null}
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p className="helper-text">Loading beds...</p> : null}
+      <div style={{ display: 'grid', gap: '0.6rem', marginTop: '0.9rem' }}>
+        {message ? <p className="success-text">{message}</p> : null}
+        {error ? <p className="error-text">{error}</p> : null}
+        {loading ? <p className="helper-text">Loading beds...</p> : null}
+      </div>
 
-      <input
-        value={patientName}
-        disabled={readOnly}
-        onChange={(event) => setPatientName(event.target.value)}
-        placeholder="Patient name for admit action"
-      />
+      <div className="grid-form" style={{ marginTop: '0.9rem' }}>
+        <label className="form-field">
+          <span>Patient name for admit action</span>
+          <input
+            value={patientName}
+            disabled={readOnly}
+            onChange={(event) => setPatientName(event.target.value)}
+            placeholder="Patient name"
+          />
+        </label>
+      </div>
 
-      {wards.map((ward) => (
-        <div key={ward} className="ward-section">
-          <h3>{ward}</h3>
-          <div className="bed-grid">
-            {beds.filter((bed) => bed.ward === ward).map((bed) => (
-              <article key={bed.id} className={`bed-card bed-${bed.status}`}>
-                <strong>{bed.bed_number}</strong>
-                <small>{bed.patient_name ?? 'Vacant'}</small>
-                <div className="action-stack">
-                  <button
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() => {
-                      void (async () => {
-                        try {
-                          setError('');
-                          setMessage('');
-                          await api.patch(`/beds/${bed.id}`, { action: 'admit', patient_name: patientName || 'Admitted Patient' }, token);
-                          setMessage(`${bed.bed_number} admitted`);
-                          await loadBeds();
-                        } catch (actionError) {
-                          setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
-                        }
-                      })();
-                    }}
-                  >
-                    Admit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() => {
-                      void (async () => {
-                        try {
-                          setError('');
-                          setMessage('');
-                          await api.patch(`/beds/${bed.id}`, { action: 'discharge' }, token);
-                          setMessage(`${bed.bed_number} discharged`);
-                          await loadBeds();
-                        } catch (actionError) {
-                          setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
-                        }
-                      })();
-                    }}
-                  >
-                    Discharge
-                  </button>
-                  <button
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() => {
-                      void (async () => {
-                        try {
-                          setError('');
-                          setMessage('');
-                          await api.patch(`/beds/${bed.id}`, { action: 'cleaning' }, token);
-                          setMessage(`${bed.bed_number} marked cleaning`);
-                          await loadBeds();
-                        } catch (actionError) {
-                          setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
-                        }
-                      })();
-                    }}
-                  >
-                    Cleaning
-                  </button>
+      <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
+        {wards.length ? wards.map((ward) => {
+          const wardBeds = beds.filter((bed) => bed.ward === ward);
+
+          return (
+            <article key={ward} className="admin-form-grid" style={{ display: 'grid', gap: '0.9rem' }}>
+              <div className="card-head">
+                <div>
+                  <strong>{ward}</strong>
+                  <p>{wardBeds.length} bed{wardBeds.length === 1 ? '' : 's'} in this ward</p>
                 </div>
-              </article>
-            ))}
+                <span className="badge">Ward</span>
+              </div>
+
+              <div className="bed-grid">
+                {wardBeds.map((bed) => (
+                  <article key={bed.id} className={`bed-card bed-${bed.status}`}>
+                    <div className="card-head" style={{ alignItems: 'flex-start' }}>
+                      <div>
+                        <strong>{bed.bed_number}</strong>
+                        <p>{bed.patient_name ?? 'Vacant'}</p>
+                      </div>
+                      <span className={`badge bed-badge bed-${bed.status}`}>{bed.status.replace('_', ' ')}</span>
+                    </div>
+                    <div className="action-stack" style={{ marginTop: '0.35rem' }}>
+                      <button
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() => {
+                          void (async () => {
+                            try {
+                              setError('');
+                              setMessage('');
+                              await api.patch(`/beds/${bed.id}`, { action: 'admit', patient_name: patientName || 'Admitted Patient' }, token);
+                              setMessage(`${bed.bed_number} admitted`);
+                              await loadBeds();
+                            } catch (actionError) {
+                              setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
+                            }
+                          })();
+                        }}
+                      >
+                        Admit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() => {
+                          void (async () => {
+                            try {
+                              setError('');
+                              setMessage('');
+                              await api.patch(`/beds/${bed.id}`, { action: 'discharge' }, token);
+                              setMessage(`${bed.bed_number} discharged`);
+                              await loadBeds();
+                            } catch (actionError) {
+                              setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
+                            }
+                          })();
+                        }}
+                      >
+                        Discharge
+                      </button>
+                      <button
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() => {
+                          void (async () => {
+                            try {
+                              setError('');
+                              setMessage('');
+                              await api.patch(`/beds/${bed.id}`, { action: 'cleaning' }, token);
+                              setMessage(`${bed.bed_number} marked cleaning`);
+                              await loadBeds();
+                            } catch (actionError) {
+                              setError(actionError instanceof Error ? actionError.message : 'Unable to update bed');
+                            }
+                          })();
+                        }}
+                      >
+                        Cleaning
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </article>
+          );
+        }) : (
+          <div className="empty-state">
+            <strong>No wards found yet.</strong>
+            <p>Add a bed first to start grouping wards and managing admissions.</p>
           </div>
-        </div>
-      ))}
+        )}
+      </div>
     </section>
   );
 };

@@ -80,20 +80,37 @@ export const QueuePanel = () => {
   };
 
   const waitingList = queue.items.filter((item) => item.status !== 'done');
+  const queueStats = [
+    { label: 'Waiting', value: queue.summary.waiting },
+    { label: 'Called', value: queue.summary.called },
+    { label: 'Done', value: queue.summary.done },
+  ];
 
   return (
     <section className="panel">
       <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Smart Queue</p>
+          <h2>Book a token and follow the live queue</h2>
+          <p className="hero-text">Choose your department, generate a token, and see the current line in real time.</p>
+        </div>
         <div className="stat-row">
           <div className="mini-stat">
             <Clock3 size={18} />
             <span>{queue.summary.estimatedWaitMinutes} min wait</span>
           </div>
-          <div className="mini-stat">
-            <Ticket size={18} />
-            <span>{queue.summary.waiting} waiting</span>
-          </div>
         </div>
+      </div>
+
+      <div className="stat-row" style={{ marginBottom: '1rem' }}>
+        {queueStats.map((item) => (
+          <div key={item.label} className="mini-stat">
+            <Ticket size={18} />
+            <span>
+              {item.label}: {item.value}
+            </span>
+          </div>
+        ))}
       </div>
 
       <form className="grid-form" onSubmit={handleSubmit}>
@@ -141,6 +158,7 @@ export const QueuePanel = () => {
             <div>
               <strong>{item.token_number}</strong>
               <p>{item.patient_name}</p>
+              <small>{item.department}</small>
             </div>
             <div className="queue-meta">
               <span>#{index + 1} in line</span>

@@ -39,6 +39,18 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
     }
   };
 
+  const getStatusTone = (status: Doctor['status']) => {
+    if (status === 'available') return 'stock-ok';
+    if (status === 'busy') return 'called';
+    return 'stock-out';
+  };
+
+  const getStatusLabel = (status: Doctor['status']) => {
+    if (status === 'available') return 'Available';
+    if (status === 'busy') return 'Busy';
+    return 'Off duty';
+  };
+
   useEffect(() => {
     void loadDoctors();
   }, []);
@@ -74,10 +86,25 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
         <div>
           <p className="eyebrow">Doctor Control</p>
           <h2>Update doctor status, room, and next slot</h2>
+          <p className="helper-text">Use the form above to add a doctor, then edit each existing doctor with clear fields and a dedicated save button.</p>
+        </div>
+        <div className="feature-grid" style={{ width: 'min(100%, 430px)', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+          <article className="mini-stat">
+            <strong>{doctors.filter((doctor) => doctor.status === 'available').length}</strong>
+            <span>Available</span>
+          </article>
+          <article className="mini-stat">
+            <strong>{doctors.filter((doctor) => doctor.status === 'busy').length}</strong>
+            <span>Busy</span>
+          </article>
+          <article className="mini-stat">
+            <strong>{doctors.filter((doctor) => doctor.status === 'off_duty').length}</strong>
+            <span>Off duty</span>
+          </article>
         </div>
       </div>
 
-      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)} style={{ marginBottom: '1.1rem' }}>
         <label className="form-field">
           <span>Doctor name</span>
           <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Dr. Meera Joshi" required disabled={readOnly} />
@@ -115,54 +142,74 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
 
       <div className="stack-list">
         {doctors.map((doctor) => (
-          <article key={doctor.id} className="info-card">
+          <article key={doctor.id} className="info-card" style={{ gap: '0.9rem' }}>
             <div className="card-head">
               <div>
                 <strong>{doctor.name}</strong>
-                <p>{doctor.department}</p>
+                <p>{doctor.specialization}</p>
               </div>
-              <select
-                value={drafts[doctor.id]?.status ?? doctor.status}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value as Doctor['status'];
-                  setDrafts((current) => ({
-                    ...current,
-                    [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), status: value },
-                  }));
-                }}
-              >
-                <option value="available">Available</option>
-                <option value="busy">Busy</option>
-                <option value="off_duty">Off duty</option>
-              </select>
+              <span className={`badge badge-${getStatusTone(drafts[doctor.id]?.status ?? doctor.status)}`}>{getStatusLabel(drafts[doctor.id]?.status ?? doctor.status)}</span>
             </div>
-            <div className="grid-form">
-              <input
-                value={drafts[doctor.id]?.room ?? doctor.room}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setDrafts((current) => ({
-                    ...current,
-                    [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), room: value },
-                  }));
-                }}
-              />
-              <input
-                value={drafts[doctor.id]?.next_slot ?? doctor.next_slot}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setDrafts((current) => ({
-                    ...current,
-                    [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), next_slot: value },
-                  }));
-                }}
-              />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span className="badge badge-called">Department: {doctor.department}</span>
+              <span className="badge badge-stock-ok">Room: {drafts[doctor.id]?.room ?? doctor.room}</span>
+              <span className="badge">{drafts[doctor.id]?.next_slot ?? doctor.next_slot}</span>
+            </div>
+            <div style={{ display: 'grid', gap: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
+              <div className="card-head" style={{ alignItems: 'flex-start' }}>
+                <div>
+                  <p className="token-label">Edit details</p>
+                  <strong>Update status and schedule</strong>
+                </div>
+                <select
+                  value={drafts[doctor.id]?.status ?? doctor.status}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value as Doctor['status'];
+                    setDrafts((current) => ({
+                      ...current,
+                      [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), status: value },
+                    }));
+                  }}
+                >
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                  <option value="off_duty">Off duty</option>
+                </select>
+              </div>
+              <div className="grid-form">
+              <label className="form-field">
+                <span>Room</span>
+                <input
+                  value={drafts[doctor.id]?.room ?? doctor.room}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDrafts((current) => ({
+                      ...current,
+                      [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), room: value },
+                    }));
+                  }}
+                />
+              </label>
+              <label className="form-field">
+                <span>Next slot</span>
+                <input
+                  value={drafts[doctor.id]?.next_slot ?? doctor.next_slot}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDrafts((current) => ({
+                      ...current,
+                      [doctor.id]: { ...(current[doctor.id] ?? { status: doctor.status, room: doctor.room, next_slot: doctor.next_slot }), next_slot: value },
+                    }));
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 disabled={readOnly}
+                style={{ alignSelf: 'end' }}
                 onClick={() => {
                   void (async () => {
                     try {
@@ -177,8 +224,9 @@ export const AdminDoctorTools = ({ token, readOnly = false }: { token: string; r
                   })();
                 }}
               >
-                Save
+                Save changes
               </button>
+            </div>
             </div>
           </article>
         ))}

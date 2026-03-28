@@ -19,6 +19,7 @@ export const MedicinePanel = () => {
 
   const loadMedicines = async () => {
     try {
+      setLoading(true);
       const data = await api.get<{ items: Medicine[] }>(`/medicines?search=${encodeURIComponent(search)}`);
       setMedicines(data.items);
       setError('');
@@ -37,9 +38,39 @@ export const MedicinePanel = () => {
     void loadMedicines();
   });
 
+  const stockCounts = {
+    total: medicines.length,
+    inStock: medicines.filter((medicine) => medicine.stock_qty > 0).length,
+    low: medicines.filter((medicine) => medicine.stock_qty > 0 && medicine.stock_qty <= 15).length,
+    out: medicines.filter((medicine) => medicine.stock_qty <= 0).length,
+  };
+
   return (
     <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Medicine Hub</p>
+          <h2>Search stock and alternatives across the pharmacy</h2>
+          <p className="hero-text">Look up medicine names, brand names, stock status, and available alternatives.</p>
+        </div>
+        <div className="stat-row">
+          <div className="mini-stat">
+            <span>Total: {stockCounts.total}</span>
+          </div>
+          <div className="mini-stat">
+            <span>In stock: {stockCounts.inStock}</span>
+          </div>
+        </div>
+      </div>
 
+      <div className="stat-row" style={{ marginBottom: '1rem' }}>
+        <div className="mini-stat">
+          <span>Low stock: {stockCounts.low}</span>
+        </div>
+        <div className="mini-stat">
+          <span>Out of stock: {stockCounts.out}</span>
+        </div>
+      </div>
 
       <label className="search-box">
         <Search size={18} />

@@ -196,6 +196,45 @@ const adminUsers = [
   },
 ];
 
+const complaints = [
+  {
+    patient_name: 'Ravi Kumar',
+    phone: '9876543210',
+    department: 'General Medicine',
+    subject: 'Long waiting time',
+    message: 'Doctor consultation has been delayed for more than 45 minutes.',
+    status: 'open',
+    admin_note: '',
+  },
+  {
+    patient_name: 'Aisha Khan',
+    phone: '9123456780',
+    department: 'Pharmacy',
+    subject: 'Medicine not available',
+    message: 'The prescribed medicine was not available at the pharmacy counter.',
+    status: 'in_review',
+    admin_note: 'Pharmacy team is checking an alternative stock source.',
+  },
+  {
+    patient_name: 'Neha Sharma',
+    phone: '9988776655',
+    department: 'Radiology',
+    subject: 'Staff behavior',
+    message: 'The staff at the scan desk was not responding properly to patient queries.',
+    status: 'resolved',
+    admin_note: 'Issue reviewed and staff has been briefed by the supervisor.',
+  },
+  {
+    patient_name: 'Imran Ali',
+    phone: '9001122334',
+    department: 'Emergency',
+    subject: 'Bed delay',
+    message: 'Patient admission was delayed because no bed status update was available.',
+    status: 'open',
+    admin_note: '',
+  },
+];
+
 const getErrorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 const seedMedicines = async () => {
@@ -293,15 +332,29 @@ const seedAdminUsers = async () => {
   return missing.length;
 };
 
+const seedComplaints = async () => {
+  const { data: existing, error } = await supabase.from('complaints').select('patient_name, subject');
+  if (error) throw error;
+
+  const existingKeys = new Set((existing ?? []).map((item) => `${item.patient_name}:${item.subject}`));
+  const missing = complaints.filter((item) => !existingKeys.has(`${item.patient_name}:${item.subject}`));
+  if (!missing.length) return 0;
+
+  const { error: insertError } = await supabase.from('complaints').insert(missing);
+  if (insertError) throw insertError;
+  return missing.length;
+};
+
 const main = async () => {
   try {
-    const [medicineCount, bedCount, doctorCount, machineCount, queueCount, adminUserCount] = await Promise.all([
+    const [medicineCount, bedCount, doctorCount, machineCount, queueCount, adminUserCount, complaintCount] = await Promise.all([
       seedMedicines(),
       seedBeds(),
       seedDoctors(),
       seedMachines(),
       seedQueue(),
       seedAdminUsers(),
+      seedComplaints(),
     ]);
 
     console.log(
@@ -315,6 +368,7 @@ const main = async () => {
             machines: machineCount,
             queue_items: queueCount,
             admin_users: adminUserCount,
+            complaints: complaintCount,
           },
         },
         null,

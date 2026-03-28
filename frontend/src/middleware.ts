@@ -12,7 +12,7 @@ export type AuthProfile = {
   email: string | null;
 };
 
-const PUBLIC_PATHS = new Set(['/', '/queue', '/medicines', '/beds', '/doctors', '/machines', '/scan', '/login']);
+const PUBLIC_PATHS = new Set(['/', '/queue', '/medicines', '/beds', '/doctors', '/machines', '/scan', '/complaints', '/history', '/login']);
 
 function matches(pathname: string, bases: string[]) {
   return bases.some((base) => pathname === base || pathname.startsWith(`${base}/`));

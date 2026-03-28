@@ -3,7 +3,9 @@ import type { ReactNode } from 'react';
 import {
   BedDouble,
   ChevronRight,
+  FileClock,
   Home,
+  MessageSquareWarning,
   Pill,
   ScanText,
   Search,
@@ -13,23 +15,27 @@ import {
   Stethoscope,
   Ticket,
 } from 'lucide-react';
-import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AdminBedTools } from './components/AdminBedTools';
+import { AdminComplaintTools } from './components/AdminComplaintTools';
 import { AdminDoctorTools } from './components/AdminDoctorTools';
+import { AdminMedicalHistoryTools } from './components/AdminMedicalHistoryTools';
 import { AdminLogin } from './components/AdminLogin';
 import type { AdminAccessRole, AdminSession } from './components/AdminLogin';
 import { AdminMachineTools } from './components/AdminMachineTools';
 import { AdminPharmacyTools } from './components/AdminPharmacyTools';
 import { AdminQueueTools } from './components/AdminQueueTools';
 import { BedPanel } from './components/BedPanel';
+import { ComplaintPanel } from './components/ComplaintPanel';
 import { DoctorPanel } from './components/DoctorPanel';
 import { MachinePanel } from './components/MachinePanel';
+import { MedicalHistoryPanel } from './components/MedicalHistoryPanel';
 import { MedicinePanel } from './components/MedicinePanel';
 import { PatientChatWidget } from './components/PatientChatWidget';
 import { QueuePanel } from './components/QueuePanel';
 import { VisionPanel } from './components/VisionPanel';
 import { ADMIN_AUTH_EXPIRED_EVENT, ADMIN_PROFILE_STORAGE_KEY, ADMIN_TOKEN_STORAGE_KEY, api } from './lib/api';
-import type { Bed, Doctor, Machine, Medicine, QueueItem } from './types';
+import type { Bed, Complaint, Doctor, Machine, MedicalHistory, Medicine, QueueItem } from './types';
 
 const patientLinks = [
   { to: '/queue', label: 'Smart Queue', icon: Ticket },
@@ -38,6 +44,8 @@ const patientLinks = [
   { to: '/machines', label: 'Machines', icon: Settings2 },
   { to: '/beds', label: 'Beds & Wards', icon: BedDouble },
   { to: '/scan', label: 'Scan', icon: ScanText },
+  { to: '/history', label: 'Past History', icon: FileClock },
+  { to: '/complaints', label: 'Complaints', icon: MessageSquareWarning },
 ];
 
 const adminLinks = [
@@ -46,14 +54,8 @@ const adminLinks = [
   { to: '/admin/doctors', label: 'Doctors', icon: Stethoscope },
   { to: '/admin/machines', label: 'Machines', icon: Settings2 },
   { to: '/admin/beds', label: 'Beds', icon: BedDouble },
-];
-
-const quickCards = [
-  { to: '/queue', title: 'Smart Queue', text: 'Book token and track live position.', icon: Ticket },
-  { to: '/medicines', title: 'Medicine Hub', text: 'Search stock and location instantly.', icon: Pill },
-  { to: '/doctors', title: 'Doctors', text: 'Check doctor status and next slot.', icon: Stethoscope },
-  { to: '/machines', title: 'Machines', text: 'See which equipment is available.', icon: Settings2 },
-  { to: '/access', title: 'Switch User', text: 'Open staff or admin sign in separately.', icon: Shield },
+  { to: '/admin/history', label: 'Medical History', icon: FileClock },
+  { to: '/admin/complaints', label: 'Complaints', icon: MessageSquareWarning },
 ];
 
 type InsightCard = {
@@ -76,27 +78,23 @@ type AdminOverviewData = {
   doctors: Doctor[];
   machines: Machine[];
   medicines: Medicine[];
+  medicalHistories: MedicalHistory[];
+  complaints: Complaint[];
 };
 
-const roleOptions: Array<{
-  role: AdminAccessRole;
-  label: string;
-  title: string;
-  note: string;
-}> = [
-  { role: 'admin', label: 'Hospital Admin', title: 'Full Control', note: 'Queue, pharmacy, doctors, machines, beds' },
-  { role: 'staff', label: 'Staff', title: 'Operations Desk', note: 'Daily workflow updates and live service handling' },
-  { role: 'nodal_officer', label: 'Nodal Officer', title: 'Read Only', note: 'Supervision view with no write actions' },
-];
+
 
 const AppFrame = ({
   children,
   adminToken,
+  onLogout,
 }: {
   children: ReactNode;
   adminToken: string | null;
+  onLogout?: () => void;
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const activeSection = useMemo(() => {
     if (location.pathname.startsWith('/admin')) return 'Admin';
@@ -122,6 +120,11 @@ const AppFrame = ({
         { to: '/scan', label: 'Scan', icon: ScanText },
       ];
 
+  const handleShellLogout = () => {
+    onLogout?.();
+    navigate('/access', { replace: true });
+  };
+
   return (
     <div className="app-frame">
       <aside className="sidebar">
@@ -132,6 +135,24 @@ const AppFrame = ({
             <span>Srinagar</span>
           </div>
         </div>
+
+        {showAdminNav ? (
+          <div className="sidebar-group">
+            <p className="sidebar-label">Admin Pages</p>
+            <nav className="sidebar-nav">
+              <NavLink to="/admin" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+                <ShieldCheck size={18} />
+                <span>Overview</span>
+              </NavLink>
+              {adminLinks.map(({ to, label, icon: Icon }) => (
+                <NavLink key={to} to={to} className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        ) : null}
 
         <div className="sidebar-group">
           <p className="sidebar-label">Patient Pages</p>
@@ -144,36 +165,6 @@ const AppFrame = ({
             ))}
           </nav>
         </div>
-
-        {showAdminNav ? (
-          <>
-            <div className="sidebar-group">
-              <p className="sidebar-label">Admin Pages</p>
-              <nav className="sidebar-nav">
-                <NavLink to="/admin" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-                  <ShieldCheck size={18} />
-                  <span>Overview</span>
-                </NavLink>
-                {adminLinks.map(({ to, label, icon: Icon }) => (
-                  <NavLink key={to} to={to} className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-                    <Icon size={18} />
-                    <span>{label}</span>
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
-
-            <div className="sidebar-group">
-              <p className="sidebar-label">User Access</p>
-              <nav className="sidebar-nav">
-                <NavLink to="/access" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-                  <Shield size={18} />
-                  <span>Switch User</span>
-                </NavLink>
-              </nav>
-            </div>
-          </>
-        ) : null}
 
         <div className="sidebar-footer">
           <div className="sidebar-note">
@@ -188,9 +179,29 @@ const AppFrame = ({
             <Search size={16} />
             <span>{activeSection}</span>
           </div>
-          <nav className="topnav compact-topnav role-switcher">
+          <nav className="topnav compact-topnav role-switcher" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <NavLink to="/">Patient</NavLink>
-            <NavLink to="/access">{adminToken ? 'Admin Panel' : 'Switch User'}</NavLink>
+            {adminToken ? (
+              <>
+                <NavLink to="/admin">Admin Panel</NavLink>
+                <button 
+                  type="button" 
+                  onClick={handleShellLogout} 
+                  style={{ 
+                    background: 'transparent', 
+                    color: 'var(--danger)', 
+                    border: 'none', 
+                    padding: '0.4rem 0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <NavLink to="/access">Staff Login</NavLink>
+            )}
           </nav>
         </header>
 
@@ -211,59 +222,21 @@ const AppFrame = ({
 };
 
 const PatientHome = () => (
-  <main className="page-shell">
-    <section className="hero clinical-hero">
-      <div className="hero-copy">
+  <main className="page-shell centered-shell">
+    <section className="hero clinical-hero centered-hero">
+      <div className="hero-copy centered-copy">
         <p className="eyebrow">Govt Hospital, Srinagar</p>
-        <h1>Clinical access in one calm flow.</h1>
+        <h1>Welcome to Govt Hospital</h1>
         <p className="hero-text">
-          Move between queue, medicines, doctors, machines, beds, and scan pages without a crowded dashboard.
+          Authorized personnel please log in to access the hospital management system.
         </p>
-        <div className="hero-cta-row">
-          <Link className="hero-primary-link" to="/queue">
-            Open patient pages
+        <div className="hero-cta-row centered-cta">
+          <Link className="hero-primary-link" to="/admin">
+            Staff Login
             <ChevronRight size={16} />
           </Link>
-          <div className="hero-chip-row">
-            <span>Live queue</span>
-            <span>Doctor availability</span>
-            <span>Machine status</span>
-          </div>
         </div>
       </div>
-
-      <div className="hero-bento">
-        <div className="hero-metric hero-metric-primary">
-          <p>Current focus</p>
-          <strong>Patient Access</strong>
-          <span>Responsive pages for web and mobile</span>
-        </div>
-        <div className="hero-metric">
-          <p>Realtime</p>
-          <strong>Supabase</strong>
-          <span>Queue, beds, doctors, machines</span>
-        </div>
-        <div className="hero-metric">
-          <p>Assistant</p>
-          <strong>Gemini Scan</strong>
-          <span>Upload and transcribe prescriptions</span>
-        </div>
-      </div>
-    </section>
-
-    <section className="feature-grid">
-      {quickCards.map(({ to, title, text, icon: Icon }) => (
-        <Link key={to} className="link-card editorial-card" to={to}>
-          <div className="editorial-card-icon">
-            <Icon size={20} />
-          </div>
-          <strong>{title}</strong>
-          <p>{text}</p>
-          <span>
-            Open page <ChevronRight size={14} />
-          </span>
-        </Link>
-      ))}
     </section>
   </main>
 );
@@ -278,12 +251,14 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
     const load = async () => {
       try {
         setError('');
-        const [queue, beds, doctors, machines, medicines] = await Promise.all([
+        const [queue, beds, doctors, machines, medicines, medicalHistories, complaints] = await Promise.all([
           api.get<{ items: QueueItem[]; summary: AdminOverviewData['queue'] }>('/queue', token),
           api.get<{ items: Bed[]; summary: AdminOverviewData['beds'] }>('/beds', token),
           api.get<{ items: Doctor[] }>('/doctors', token),
           api.get<{ items: Machine[] }>('/machines', token),
           api.get<{ items: Medicine[] }>('/medicines', token),
+          api.get<{ items: MedicalHistory[] }>('/medical-history', token),
+          api.get<{ items: Complaint[] }>('/complaints', token),
         ]);
 
         if (cancelled) {
@@ -298,6 +273,8 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
           doctors: doctors.items,
           machines: machines.items,
           medicines: medicines.items,
+          medicalHistories: medicalHistories.items,
+          complaints: complaints.items,
         });
       } catch (loadError) {
         if (!cancelled) {
@@ -321,7 +298,6 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
   }
 
   const queueMax = Math.max(data.queue.waiting, data.queue.called, data.queue.done, 1);
-  const bedMax = Math.max(data.beds.available, data.beds.occupied, data.beds.cleaning, 1);
   const today = new Date().toDateString();
   const todaysPatients = data.queueItems.filter((item) => new Date(item.created_at).toDateString() === today);
   const totalPatients = todaysPatients.length;
@@ -357,6 +333,17 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
     { label: 'Occupied', value: data.beds.occupied, tone: 'bed-occupied' },
     { label: 'Cleaning', value: data.beds.cleaning, tone: 'bed-cleaning' },
   ];
+  const totalBeds = bedBars.reduce((sum, item) => sum + item.value, 0);
+  const availableAngle = totalBeds ? (data.beds.available / totalBeds) * 360 : 0;
+  const occupiedAngle = totalBeds ? (data.beds.occupied / totalBeds) * 360 : 0;
+  const cleaningAngle = Math.max(0, 360 - availableAngle - occupiedAngle);
+  const bedChartStyle = {
+    background: `conic-gradient(
+      #55a9d1 0deg ${availableAngle}deg,
+      #7e8bad ${availableAngle}deg ${availableAngle + occupiedAngle}deg,
+      #ebb76a ${availableAngle + occupiedAngle}deg ${availableAngle + occupiedAngle + cleaningAngle}deg
+    )`,
+  };
 
   return (
     <section className="admin-overview-grid">
@@ -435,21 +422,30 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
         <div className="chart-card-head">
           <div>
             <p className="eyebrow">Bed Capacity</p>
-            <h3>Ward occupancy</h3>
+            <h3>Ward occupancy split</h3>
           </div>
+          <span className="mini-stat">{totalBeds} total beds</span>
         </div>
-        <div className="bar-chart">
-          {bedBars.map((item) => (
-            <div key={item.label} className="bar-row">
-              <div className="bar-row-meta">
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </div>
-              <div className="bar-track">
-                <div className={`bar-fill ${item.tone}`} style={{ width: `${(item.value / bedMax) * 100}%` }} />
+        <div className="donut-card-body">
+          <div className="donut-visual-wrap">
+            <div className="donut-chart" style={bedChartStyle}>
+              <div className="donut-hole">
+                <span>Total</span>
+                <strong>{totalBeds}</strong>
               </div>
             </div>
-          ))}
+          </div>
+          <div className="donut-legend">
+            {bedBars.map((item) => (
+              <div key={item.label} className="donut-legend-row">
+                <div className="donut-legend-copy">
+                  <span className={`legend-dot ${item.tone}`} />
+                  <span>{item.label}</span>
+                </div>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
         </div>
       </article>
 
@@ -496,6 +492,14 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
           <span>In stock</span>
           <strong>{stockedMedicines}</strong>
         </div>
+        <div className="metric-tile">
+          <span>History records</span>
+          <strong>{data.medicalHistories.length}</strong>
+        </div>
+        <div className="metric-tile">
+          <span>Open complaints</span>
+          <strong>{data.complaints.filter((item) => item.status !== 'resolved').length}</strong>
+        </div>
       </article>
     </section>
   );
@@ -503,109 +507,25 @@ const AdminOverviewCharts = ({ token }: { token: string }) => {
 
 const AccessPortal = ({
   adminToken,
-  adminProfile,
   authNotice,
   onLogin,
 }: {
   adminToken: string | null;
-  adminProfile: AdminProfile | null;
   authNotice: string;
   onLogin: (session: AdminSession) => void;
 }) => {
-  const [mode, setMode] = useState<'patient' | 'admin'>('patient');
-  const [selectedRole, setSelectedRole] = useState<AdminAccessRole>('admin');
-
   return (
-    <main className="page-shell">
-      <section className="hero section-hero page-hero">
-        <div className="hero-copy">
-          <p className="eyebrow">Switch User</p>
-          <h1>Choose patient or staff access first.</h1>
-          <p className="hero-text">
-            Patient pages stay public. Staff and admin controls open only after sign in.
-          </p>
-        </div>
-        <div className="page-insights">
-          <article className="page-insight-card">
-            <span>Patient</span>
-            <strong>Open Access</strong>
-            <small>Queue, medicines, doctors, machines, beds, and scan</small>
-          </article>
-          <article className="page-insight-card access-insight-card">
-            <span>Staff Access</span>
-            <strong>Protected Login</strong>
-            <small>Hospital admin, staff, and nodal officer sign in</small>
-          </article>
-        </div>
-      </section>
-
-      <section className="panel access-panel">
-        <div className="user-switch-row">
-          <button
-            type="button"
-            className={mode === 'patient' ? 'switch-chip active' : 'switch-chip'}
-            onClick={() => setMode('patient')}
-          >
-            Patient
-          </button>
-          <button
-            type="button"
-            className={mode === 'admin' ? 'switch-chip active' : 'switch-chip'}
-            onClick={() => setMode('admin')}
-          >
-            Staff / Admin
-          </button>
-        </div>
-
-        {mode === 'patient' ? (
-          <div className="access-grid">
-            <Link className="link-card editorial-card" to="/queue">
-              <div className="editorial-card-icon">
-                <Ticket size={20} />
-              </div>
-              <strong>Continue as Patient</strong>
-              <p>Open queue booking, medicine search, doctor directory, equipment, beds, and scan.</p>
-              <span>
-                Open patient pages <ChevronRight size={14} />
-              </span>
-            </Link>
-          </div>
-        ) : adminToken ? (
-          <div className="access-grid">
-            <Link className="link-card editorial-card" to="/admin">
-              <div className="editorial-card-icon">
-                <ShieldCheck size={20} />
-              </div>
-              <strong>Open Detailed Admin Access</strong>
-              <p>
-                Signed in as {roleOptions.find((item) => item.role === adminProfile?.role)?.label ?? 'Staff'}.
-                Open the dedicated hospital control workspace.
-              </p>
-              <span>
-                Open admin panel <ChevronRight size={14} />
-              </span>
-            </Link>
-          </div>
-        ) : (
-          <div className="access-grid access-grid-wide">
-            <div className="role-card-grid">
-              {roleOptions.map((option) => (
-                <button
-                  key={option.role}
-                  type="button"
-                  className={selectedRole === option.role ? 'role-card active' : 'role-card'}
-                  onClick={() => setSelectedRole(option.role)}
-                >
-                  <span>{option.label}</span>
-                  <strong>{option.title}</strong>
-                  <small>{option.note}</small>
-                </button>
-              ))}
-            </div>
-            <AdminLogin role={selectedRole} onLogin={onLogin} notice={authNotice} />
-          </div>
-        )}
-      </section>
+    <main className="page-shell centered-shell">
+      {adminToken ? (
+        <section className="panel access-panel centered-panel">
+          <h2>Staff Session Active</h2>
+          <Link className="primary-button" to="/admin" style={{ display: 'inline-flex', marginTop: '1rem' }}>
+            Open Admin Panel
+          </Link>
+        </section>
+      ) : (
+        <AdminLogin onLogin={onLogin} notice={authNotice} />
+      )}
     </main>
   );
 };
@@ -632,37 +552,20 @@ const PatientSection = ({
 );
 
 const AdminLoginPage = ({
-  selectedRole,
   authNotice,
   onLogin,
 }: {
-  selectedRole: AdminAccessRole;
   authNotice: string;
   onLogin: (session: AdminSession) => void;
 }) => (
-  <main className="page-shell">
-    <section className="hero section-hero admin-login-hero">
-      <div className="hero-copy">
-        <p className="eyebrow">Admin Sign In</p>
-        <h1>Login to open the detailed admin panel.</h1>
-        <p className="hero-text">
-          Queue control, medicine updates, doctor availability, machines, and bed management are available after sign in.
-        </p>
-      </div>
-    </section>
-    <section className="admin-login-page">
-      <AdminLogin role={selectedRole} onLogin={onLogin} notice={authNotice} />
-    </section>
+  <main className="page-shell centered-shell">
+    <AdminLogin onLogin={onLogin} notice={authNotice} />
   </main>
 );
 
 const AdminSection = ({
   title,
   description,
-  insights,
-  token,
-  profile,
-  onLogout,
   children,
 }: {
   title: string;
@@ -673,40 +576,14 @@ const AdminSection = ({
   onLogout: () => void;
   children: ReactNode;
 }) => (
-  <main className="page-shell">
-    <section className="hero section-hero page-hero">
+  <main className="page-shell admin-page-shell">
+    <section className="page-header-plain admin-header-plain">
       <div className="hero-copy">
         <p className="eyebrow">Admin Console</p>
         <h1>{title}</h1>
         <p className="hero-text">{description}</p>
       </div>
-      <div className="page-insights">
-        {insights.map((item) => (
-          <article key={item.label} className="page-insight-card">
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-            <small>{item.note}</small>
-          </article>
-        ))}
-        {token ? (
-          <article className="page-insight-card action-insight">
-            <span>Session</span>
-            <strong>{roleOptions.find((item) => item.role === profile?.role)?.label ?? 'Admin'}</strong>
-            <button type="button" onClick={onLogout}>
-              Logout
-            </button>
-          </article>
-        ) : null}
-      </div>
     </section>
-    <nav className="subnav pill-subnav scroll-subnav">
-      <NavLink to="/admin">Overview</NavLink>
-      {adminLinks.map(({ to, label }) => (
-        <NavLink key={to} to={to}>
-          {label}
-        </NavLink>
-      ))}
-    </nav>
     {children}
   </main>
 );
@@ -715,7 +592,6 @@ function App() {
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
   const [authNotice, setAuthNotice] = useState('');
-  const [selectedAdminRole, setSelectedAdminRole] = useState<AdminAccessRole>('admin');
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
@@ -727,7 +603,6 @@ function App() {
       try {
         const parsedProfile = JSON.parse(savedProfile) as AdminProfile;
         setAdminProfile(parsedProfile);
-        setSelectedAdminRole(parsedProfile.role);
       } catch {
         window.localStorage.removeItem(ADMIN_PROFILE_STORAGE_KEY);
       }
@@ -753,7 +628,6 @@ function App() {
   const handleAdminLogin = (session: AdminSession) => {
     setAdminToken(session.token);
     setAdminProfile(session.profile);
-    setSelectedAdminRole(session.profile.role);
     setAuthNotice('');
     window.localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, session.token);
     window.localStorage.setItem(ADMIN_PROFILE_STORAGE_KEY, JSON.stringify(session.profile));
@@ -768,7 +642,7 @@ function App() {
   };
 
   return (
-    <AppFrame adminToken={adminToken}>
+    <AppFrame adminToken={adminToken} onLogout={handleAdminLogout}>
       <Routes>
         <Route path="/" element={<PatientHome />} />
         <Route
@@ -776,7 +650,6 @@ function App() {
           element={
             <AccessPortal
               adminToken={adminToken}
-              adminProfile={adminProfile}
               authNotice={authNotice}
               onLogin={handleAdminLogin}
             />
@@ -849,6 +722,28 @@ function App() {
           }
         />
         <Route
+          path="/history"
+          element={
+            <PatientSection
+              title="Past Medical History"
+              description="Verify using the patient mobile number and demo OTP to view saved history records."
+            >
+              <MedicalHistoryPanel />
+            </PatientSection>
+          }
+        />
+        <Route
+          path="/complaints"
+          element={
+            <PatientSection
+              title="Complaint Section"
+              description="Submit a service complaint so the hospital team can review delays, behavior, or support issues."
+            >
+              <ComplaintPanel />
+            </PatientSection>
+          }
+        />
+        <Route
           path="/admin"
           element={
             adminToken ? (
@@ -880,7 +775,7 @@ function App() {
                 </section>
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />
@@ -902,7 +797,7 @@ function App() {
                 <AdminQueueTools token={adminToken} />
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />
@@ -924,7 +819,7 @@ function App() {
                 <AdminPharmacyTools token={adminToken} />
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />
@@ -946,7 +841,7 @@ function App() {
                 <AdminDoctorTools token={adminToken} />
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />
@@ -968,7 +863,7 @@ function App() {
                 <AdminMachineTools token={adminToken} />
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />
@@ -990,7 +885,51 @@ function App() {
                 <AdminBedTools token={adminToken} />
               </AdminSection>
             ) : (
-              <AdminLoginPage selectedRole={selectedAdminRole} authNotice={authNotice} onLogin={handleAdminLogin} />
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
+            )
+          }
+        />
+        <Route
+          path="/admin/history"
+          element={
+            adminToken ? (
+              <AdminSection
+                title="Medical History Workspace"
+                description="Staff can add previous diagnoses, medicines, allergies, and notes manually."
+                insights={[
+                  { label: 'Records', value: 'Patient Timeline', note: 'Manual staff updates' },
+                  { label: 'Access', value: 'Mobile Verified', note: 'Patients view by mobile number and dummy OTP' },
+                ]}
+                token={adminToken}
+                profile={adminProfile}
+                onLogout={handleAdminLogout}
+              >
+                <AdminMedicalHistoryTools token={adminToken} />
+              </AdminSection>
+            ) : (
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
+            )
+          }
+        />
+        <Route
+          path="/admin/complaints"
+          element={
+            adminToken ? (
+              <AdminSection
+                title="Complaint Review"
+                description="Track all patient complaints, filter by status, and mark response progress."
+                insights={[
+                  { label: 'Feedback', value: 'Service Desk', note: 'Patient issue tracking' },
+                  { label: 'Flow', value: 'Open to Resolved', note: 'Status-based complaint handling' },
+                ]}
+                token={adminToken}
+                profile={adminProfile}
+                onLogout={handleAdminLogout}
+              >
+                <AdminComplaintTools token={adminToken} />
+              </AdminSection>
+            ) : (
+              <AdminLoginPage authNotice={authNotice} onLogin={handleAdminLogin} />
             )
           }
         />

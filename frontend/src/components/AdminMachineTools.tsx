@@ -39,6 +39,18 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
     }
   };
 
+  const getStatusTone = (status: Machine['status']) => {
+    if (status === 'available') return 'stock-ok';
+    if (status === 'in_use') return 'called';
+    return 'stock-low';
+  };
+
+  const getStatusLabel = (status: Machine['status']) => {
+    if (status === 'available') return 'Available';
+    if (status === 'in_use') return 'In use';
+    return 'Maintenance';
+  };
+
   useEffect(() => {
     void loadMachines();
   }, []);
@@ -74,10 +86,25 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
         <div>
           <p className="eyebrow">Machine Control</p>
           <h2>Update hospital machine availability and quantity</h2>
+          <p className="helper-text">Add new equipment above, then update status, count, and location in a single save step below.</p>
+        </div>
+        <div className="feature-grid" style={{ width: 'min(100%, 430px)', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+          <article className="mini-stat">
+            <strong>{machines.filter((machine) => machine.status === 'available').length}</strong>
+            <span>Available</span>
+          </article>
+          <article className="mini-stat">
+            <strong>{machines.filter((machine) => machine.status === 'in_use').length}</strong>
+            <span>In use</span>
+          </article>
+          <article className="mini-stat">
+            <strong>{machines.filter((machine) => machine.status === 'maintenance').length}</strong>
+            <span>Maintenance</span>
+          </article>
         </div>
       </div>
 
-      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)}>
+      <form className="admin-create-form admin-form-grid" onSubmit={(event) => void handleSubmit(event)} style={{ marginBottom: '1.1rem' }}>
         <label className="form-field">
           <span>Machine name</span>
           <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="MRI Scanner" required disabled={readOnly} />
@@ -115,56 +142,75 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
 
       <div className="stack-list">
         {machines.map((machine) => (
-          <article key={machine.id} className="info-card">
+          <article key={machine.id} className="info-card" style={{ gap: '0.9rem' }}>
             <div className="card-head">
               <div>
                 <strong>{machine.name}</strong>
-                <p>{machine.location}</p>
+                <p>{machine.category}</p>
               </div>
-              <select
-                value={drafts[machine.id]?.status ?? machine.status}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value as Machine['status'];
-                  setDrafts((current) => ({
-                    ...current,
-                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), status: value },
-                  }));
-                }}
-              >
-                <option value="available">Available</option>
-                <option value="in_use">In use</option>
-                <option value="maintenance">Maintenance</option>
-              </select>
+              <span className={`badge badge-${getStatusTone(drafts[machine.id]?.status ?? machine.status)}`}>{getStatusLabel(drafts[machine.id]?.status ?? machine.status)}</span>
             </div>
-            <div className="grid-form">
-              <input
-                type="number"
-                min="0"
-                value={drafts[machine.id]?.quantity ?? String(machine.quantity)}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setDrafts((current) => ({
-                    ...current,
-                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), quantity: value },
-                  }));
-                }}
-              />
-              <input
-                value={drafts[machine.id]?.location ?? machine.location}
-                disabled={readOnly}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setDrafts((current) => ({
-                    ...current,
-                    [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), location: value },
-                  }));
-                }}
-              />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span className="badge badge-called">Location: {drafts[machine.id]?.location ?? machine.location}</span>
+              <span className="badge badge-stock-ok">Qty: {drafts[machine.id]?.quantity ?? String(machine.quantity)}</span>
+            </div>
+            <div style={{ display: 'grid', gap: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
+              <div className="card-head" style={{ alignItems: 'flex-start' }}>
+                <div>
+                  <p className="token-label">Edit details</p>
+                  <strong>Update status, count, and location</strong>
+                </div>
+                <select
+                  value={drafts[machine.id]?.status ?? machine.status}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value as Machine['status'];
+                    setDrafts((current) => ({
+                      ...current,
+                      [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), status: value },
+                    }));
+                  }}
+                >
+                  <option value="available">Available</option>
+                  <option value="in_use">In use</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
+              <div className="grid-form">
+              <label className="form-field">
+                <span>Quantity</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={drafts[machine.id]?.quantity ?? String(machine.quantity)}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDrafts((current) => ({
+                      ...current,
+                      [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), quantity: value },
+                    }));
+                  }}
+                />
+              </label>
+              <label className="form-field">
+                <span>Location</span>
+                <input
+                  value={drafts[machine.id]?.location ?? machine.location}
+                  disabled={readOnly}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDrafts((current) => ({
+                      ...current,
+                      [machine.id]: { ...(current[machine.id] ?? { status: machine.status, quantity: String(machine.quantity), location: machine.location }), location: value },
+                    }));
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 disabled={readOnly}
+                style={{ alignSelf: 'end' }}
                 onClick={() => {
                   void (async () => {
                     try {
@@ -184,8 +230,9 @@ export const AdminMachineTools = ({ token, readOnly = false }: { token: string; 
                   })();
                 }}
               >
-                Save
+                Save changes
               </button>
+            </div>
             </div>
           </article>
         ))}
