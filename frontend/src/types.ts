@@ -1,5 +1,7 @@
 export type QueueStatus = 'waiting' | 'called' | 'done';
 export type BedStatus = 'available' | 'occupied' | 'cleaning';
+export type DoctorStatus = 'available' | 'busy' | 'off_duty';
+export type MachineStatus = 'available' | 'in_use' | 'maintenance';
 
 export type QueueItem = {
   id: string;
@@ -29,5 +31,27 @@ export type Bed = {
   bed_number: string;
   status: BedStatus;
   patient_name: string | null;
+  updated_at: string;
+};
+
+export type Doctor = {
+  id: string;
+  name: string;
+  department: string;
+  specialization: string;
+  status: DoctorStatus;
+  room: string;
+  next_slot: string;
+  updated_at: string;
+};
+
+export type Machine = {
+  id: string;
+  name: string;
+  category: string;
+  location: string;
+  quantity: number;
+  status: MachineStatus;
+  notes: string;
   updated_at: string;
 };

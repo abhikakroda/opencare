@@ -11,6 +11,8 @@ This project is split cleanly into:
 - Smart queue and token generation like `OPD-047`
 - Live queue position and estimated wait time
 - Realtime queue, medicine, and bed updates through Supabase subscriptions
+- Doctor availability with room and next-slot visibility
+- Machine and equipment availability across the hospital
 - Medicine search with stock colors and alternatives
 - Bed and ward management with admin actions
 - Admin login for staff actions

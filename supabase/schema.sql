@@ -31,6 +31,30 @@ create table if not exists public.beds (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.doctors (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  department text not null,
+  specialization text not null,
+  status text not null check (status in ('available', 'busy', 'off_duty')) default 'available',
+  room text not null,
+  next_slot text not null,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.machines (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  category text not null,
+  location text not null,
+  quantity integer not null default 0,
+  status text not null check (status in ('available', 'in_use', 'maintenance')) default 'available',
+  notes text not null default '',
+  updated_at timestamptz not null default now()
+);
+
 alter publication supabase_realtime add table public.queue_items;
 alter publication supabase_realtime add table public.medicines;
 alter publication supabase_realtime add table public.beds;
+alter publication supabase_realtime add table public.doctors;
+alter publication supabase_realtime add table public.machines;

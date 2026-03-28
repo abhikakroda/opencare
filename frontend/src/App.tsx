@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Activity, ArrowRight, BedDouble, Building2, Pill, ScanText, Ticket } from 'lucide-react';
+import { Activity, ArrowRight, BedDouble, Building2, Pill, ScanText, Settings2, Stethoscope, Ticket } from 'lucide-react';
 import { Link, NavLink, Route, Routes } from 'react-router-dom';
 import { AdminBedTools } from './components/AdminBedTools';
+import { AdminDoctorTools } from './components/AdminDoctorTools';
 import { AdminLogin } from './components/AdminLogin';
+import { AdminMachineTools } from './components/AdminMachineTools';
 import { AdminPharmacyTools } from './components/AdminPharmacyTools';
 import { AdminQueueTools } from './components/AdminQueueTools';
 import { BedPanel } from './components/BedPanel';
+import { DoctorPanel } from './components/DoctorPanel';
+import { MachinePanel } from './components/MachinePanel';
 import { MedicinePanel } from './components/MedicinePanel';
 import { QueuePanel } from './components/QueuePanel';
 import { VisionPanel } from './components/VisionPanel';
@@ -18,7 +22,7 @@ const PatientHome = () => (
         <p className="eyebrow">OpenCare Medicare</p>
         <h1>Hospital access, made simple.</h1>
         <p className="hero-text">
-          Open the page you need for queue, medicines, beds, or prescription scan.
+          Open the page you need for queue, medicines, doctors, machines, beds, or prescription scan.
         </p>
         <div className="hero-pills">
           <span><Activity size={16} /> Realtime queue</span>
@@ -45,6 +49,18 @@ const PatientHome = () => (
         <BedDouble size={22} />
         <strong>Beds & Wards</strong>
         <p>Check live bed occupancy by ward.</p>
+        <span>Open page <ArrowRight size={14} /></span>
+      </Link>
+      <Link className="link-card" to="/doctors">
+        <Stethoscope size={22} />
+        <strong>Doctors</strong>
+        <p>Check doctor status, room, and next slot.</p>
+        <span>Open page <ArrowRight size={14} /></span>
+      </Link>
+      <Link className="link-card" to="/machines">
+        <Settings2 size={22} />
+        <strong>Machines</strong>
+        <p>See if MRI, CT, ventilator, and other equipment are available.</p>
         <span>Open page <ArrowRight size={14} /></span>
       </Link>
       <Link className="link-card" to="/scan">
@@ -77,6 +93,8 @@ const PatientSection = ({
     <nav className="subnav">
       <NavLink to="/queue">Queue</NavLink>
       <NavLink to="/medicines">Medicines</NavLink>
+      <NavLink to="/doctors">Doctors</NavLink>
+      <NavLink to="/machines">Machines</NavLink>
       <NavLink to="/beds">Beds</NavLink>
       <NavLink to="/scan">Scan</NavLink>
     </nav>
@@ -116,6 +134,8 @@ const AdminSection = ({
       <NavLink to="/admin">Overview</NavLink>
       <NavLink to="/admin/queue">Queue</NavLink>
       <NavLink to="/admin/pharmacy">Pharmacy</NavLink>
+      <NavLink to="/admin/doctors">Doctors</NavLink>
+      <NavLink to="/admin/machines">Machines</NavLink>
       <NavLink to="/admin/beds">Beds</NavLink>
     </nav>
     {token ? children : <AdminLogin onLogin={onLogin} />}
@@ -156,6 +176,8 @@ function App() {
           <NavLink to="/">Home</NavLink>
           <NavLink to="/queue">Queue</NavLink>
           <NavLink to="/medicines">Medicines</NavLink>
+          <NavLink to="/doctors">Doctors</NavLink>
+          <NavLink to="/machines">Machines</NavLink>
           <NavLink to="/beds">Beds</NavLink>
           <NavLink to="/scan">Scan</NavLink>
           <NavLink to="/admin">Admin</NavLink>
@@ -183,6 +205,28 @@ function App() {
               description="Search by generic or brand name and check stock, quantity, and alternatives."
             >
               <MedicinePanel />
+            </PatientSection>
+          }
+        />
+        <Route
+          path="/doctors"
+          element={
+            <PatientSection
+              title="Doctor Availability"
+              description="Check which doctors are available, busy, or off duty before visiting."
+            >
+              <DoctorPanel />
+            </PatientSection>
+          }
+        />
+        <Route
+          path="/machines"
+          element={
+            <PatientSection
+              title="Machine Availability"
+              description="See whether MRI, CT, ventilator, and other hospital machines are available."
+            >
+              <MachinePanel />
             </PatientSection>
           }
         />
@@ -237,6 +281,18 @@ function App() {
                   <p>Admit, discharge, and clean beds.</p>
                   <span>Open page <ArrowRight size={14} /></span>
                 </Link>
+                <Link className="link-card" to="/admin/doctors">
+                  <Stethoscope size={22} />
+                  <strong>Doctor Workspace</strong>
+                  <p>Update doctor availability and slots.</p>
+                  <span>Open page <ArrowRight size={14} /></span>
+                </Link>
+                <Link className="link-card" to="/admin/machines">
+                  <Settings2 size={22} />
+                  <strong>Machine Workspace</strong>
+                  <p>Update equipment status and quantity.</p>
+                  <span>Open page <ArrowRight size={14} /></span>
+                </Link>
               </section>
             </AdminSection>
           }
@@ -266,6 +322,34 @@ function App() {
               onLogout={handleAdminLogout}
             >
               <AdminPharmacyTools token={adminToken ?? ''} />
+            </AdminSection>
+          }
+        />
+        <Route
+          path="/admin/doctors"
+          element={
+            <AdminSection
+              title="Doctor Workspace"
+              description="Update doctor availability, room, and next slot from this page."
+              token={adminToken}
+              onLogin={handleAdminLogin}
+              onLogout={handleAdminLogout}
+            >
+              <AdminDoctorTools token={adminToken ?? ''} />
+            </AdminSection>
+          }
+        />
+        <Route
+          path="/admin/machines"
+          element={
+            <AdminSection
+              title="Machine Workspace"
+              description="Track machine availability and whether equipment is in use or under maintenance."
+              token={adminToken}
+              onLogin={handleAdminLogin}
+              onLogout={handleAdminLogout}
+            >
+              <AdminMachineTools token={adminToken ?? ''} />
             </AdminSection>
           }
         />

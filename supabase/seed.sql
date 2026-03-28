@@ -13,3 +13,16 @@ values
   ('Ward B', 'B-02', 'occupied', 'Anita Sharma'),
   ('ICU', 'ICU-01', 'occupied', 'Critical Case'),
   ('ICU', 'ICU-02', 'available', null);
+
+insert into public.doctors (name, department, specialization, status, room, next_slot)
+values
+  ('Dr. Meera Joshi', 'Cardiology', 'Heart Specialist', 'available', 'Block B / Room 201', 'Available now'),
+  ('Dr. Ravi Menon', 'Orthopedics', 'Joint and Bone Specialist', 'busy', 'Block C / Room 114', '2:30 PM'),
+  ('Dr. Sana Khan', 'Pediatrics', 'Child Specialist', 'off_duty', 'Block A / Room 018', 'Tomorrow 10:00 AM');
+
+insert into public.machines (name, category, location, quantity, status, notes)
+values
+  ('MRI Scanner', 'Imaging', 'Radiology Floor 1', 1, 'available', 'Slot booking required'),
+  ('CT Scanner', 'Imaging', 'Radiology Floor 1', 1, 'in_use', 'Current scan running'),
+  ('Ventilator', 'ICU Support', 'ICU Store', 6, 'available', 'Portable units ready'),
+  ('Dialysis Machine', 'Renal Care', 'Ward D / Unit 2', 2, 'maintenance', 'One unit under service');
